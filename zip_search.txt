@@ -1,0 +1,11 @@
+﻿C:\Users\Lenovo T480s\Downloads\sai-hospital-backend.zip
+C:\Users\Lenovo T480s\Downloads\HospitalWebSystem.zip
+C:\Users\Lenovo T480s\Downloads\apache-tomcat-8.0.27-windows-i64.zip
+C:\Users\Lenovo T480s\Downloads\apache-tomcat-9.0.115-windows-x64.zip
+C:\Users\Lenovo T480s\Downloads\eclipse-java-2022-09-R-win32-x86_64.zip
+C:\Users\Lenovo T480s\Downloads\WhatsApp Unknown 2025-10-30 at 4.24.31 PM.zip
+C:\Users\Lenovo T480s\Downloads\mysql-connector-java-8.0.11.zip
+C:\Users\Lenovo T480s\Downloads\mysql-8.4.5-winx64.zip
+C:\Users\Lenovo T480s\Downloads\GTA.Vice.City-GamingBeasts.com-886620.zip
+C:\Users\Lenovo T480s\Downloads\futures_BTCUSD_2024_03_trades.csv.zip
+

@@ -1,0 +1,26 @@
+﻿
+FullName                                                                  Length
+--------                                                                  ------
+C:\Users\Lenovo T480s\AppData\Roaming\Code\User\History\1254c6c0\iDpO.css  19667
+C:\Users\Lenovo T480s\AppData\Roaming\Code\User\History\1254c6c0\8Enw.css  19629
+C:\Users\Lenovo T480s\AppData\Roaming\Code\User\History\1254c6c0\r2E1.css  18416
+C:\Users\Lenovo T480s\AppData\Roaming\Code\User\History\1254c6c0\e1Sp.css  17943
+C:\Users\Lenovo T480s\AppData\Roaming\Code\User\History\1254c6c0\QCkj.css  17916
+C:\Users\Lenovo T480s\AppData\Roaming\Code\User\History\1254c6c0\DQnb.css  17228
+C:\Users\Lenovo T480s\AppData\Roaming\Code\User\History\1254c6c0\J1ur.css  16714
+C:\Users\Lenovo T480s\AppData\Roaming\Code\User\History\1254c6c0\Jgvi.css  16609
+C:\Users\Lenovo T480s\AppData\Roaming\Code\User\History\1254c6c0\TPVT.css  15727
+C:\Users\Lenovo T480s\AppData\Roaming\Code\User\History\1254c6c0\2F0H.css  15727
+C:\Users\Lenovo T480s\AppData\Roaming\Code\User\History\1254c6c0\3AQX.css  15727
+C:\Users\Lenovo T480s\AppData\Roaming\Code\User\History\1254c6c0\xbvB.css  14693
+C:\Users\Lenovo T480s\AppData\Roaming\Code\User\History\1254c6c0\HXPg.css  13433
+C:\Users\Lenovo T480s\AppData\Roaming\Code\User\History\1254c6c0\STTj.css  12662
+C:\Users\Lenovo T480s\AppData\Roaming\Code\User\History\1254c6c0\ZvPw.css  12324
+C:\Users\Lenovo T480s\AppData\Roaming\Code\User\History\1254c6c0\dwU3.css  12084
+C:\Users\Lenovo T480s\AppData\Roaming\Code\User\History\1254c6c0\W25H.css  12084
+C:\Users\Lenovo T480s\AppData\Roaming\Code\User\History\1254c6c0\4wlf.css  12084
+C:\Users\Lenovo T480s\AppData\Roaming\Code\User\History\1254c6c0\bvCg.css  11126
+C:\Users\Lenovo T480s\AppData\Roaming\Code\User\History\1254c6c0\TW1D.css  11126
+
+
+

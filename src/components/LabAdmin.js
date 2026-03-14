@@ -1,0 +1,869 @@
+import { useState, useEffect } from "react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
+function LabAdmin({ onBack, activeSubTab }) {
+
+  const testProfiles = [
+    { profile: "Allergy Profile", tests: ["IgE Total"] },
+    { profile: "Anemia Profile", tests: ["Iron Studies", "Ferritin"] },
+    { profile: "Antenatal Profile (ANC)", tests: ["Pregnancy Care"] },
+    { profile: "Arthritis Profile", tests: ["RA Factor", "Anti-CCP", "Uric Acid"] },
+    { profile: "Bone Health Profile", tests: ["Calcium", "Phosphorus", "Vitamin D"] },
+    { profile: "Cancer Marker Profile", tests: ["PSA", "CA-125", "CEA"] },
+    { profile: "Cardiac Risk Profile", tests: ["High Sensitivity CRP"] },
+    { profile: "Coagulation Profile", tests: ["PT", "INR", "APTT"] },
+    { profile: "Diabetes Profile", tests: ["HbA1c", "Fasting", "PP"] },
+    { profile: "Fever Profile", tests: ["Malaria", "Dengue", "Typhoid", "CBC"] },
+    { profile: "Full Body Checkup", tests: ["Basic", "Smart", "Executive"] },
+    { profile: "Hormone Profile", tests: ["PCOS", "Testosterone", "Prolactin"] },
+    { profile: "Immunity Profile", tests: ["Total Proteins", "Globulin"] },
+    { profile: "Infection Profile", tests: ["CRP", "ESR", "CBC"] },
+    { profile: "Kidney Function Test", tests: ["KFT", "RFT"] },
+    { profile: "Lipid Profile", tests: ["Heart Health"] },
+    { profile: "Liver Function Test", tests: ["LFT"] },
+    { profile: "Pre-Operative Profile", tests: ["Surgery Clearance"] },
+    { profile: "Thyroid Profile", tests: ["Total T3", "Total T4", "TSH"] },
+    { profile: "Vitamin Profile", tests: ["Vitamin D3", "Vitamin B12"] }
+  ];
+
+  const [expandedProfiles, setExpandedProfiles] = useState([]);
+  const [selectedTests, setSelectedTests] = useState([]);
+  const [investigationSearch, setInvestigationSearch] = useState("");
+  const [recordSearch, setRecordSearch] = useState("");
+  const [recordDate, setRecordDate] = useState("");
+  const [records, setRecords] = useState([]);
+  const [editingRecordId, setEditingRecordId] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("");
+  
+  // 12-hour Time State
+  const [time12h, setTime12h] = useState({
+    hour: "10",
+    minute: "00",
+    period: "AM"
+  });
+
+  useEffect(() => {
+    if (activeSubTab === "lab_pending") setStatusFilter("PENDING");
+    if (activeSubTab === "lab_completed") setStatusFilter("COMPLETE");
+    if (activeSubTab === "lab_requests") setStatusFilter("");
+  }, [activeSubTab]);
+
+  const getInitials = (name) => {
+    if (!name) return "??";
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return dateString;
+    return d.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: true
+    }).replace(', 12:00 AM', ''); // Hide time if it's just a date (midnight)
+  };
+
+  const toggleTestSelection = (test) => {
+    if (editingRecordId) {
+      // If editing, only allow one test (behavior remains same for edit)
+      setSelectedTests([test]);
+      return;
+    }
+    setSelectedTests(prev =>
+      prev.includes(test) ? prev.filter(t => t !== test) : [...prev, test]
+    );
+  };
+
+  const [formData, setFormData] = useState({
+    name: "",
+    address: "",
+    contact: "",
+    gender: "",
+    age: "",
+    date: ""
+  });
+
+  const filteredProfiles = testProfiles.filter(p =>
+    p.profile.toLowerCase().includes(investigationSearch.toLowerCase()) ||
+    p.tests.some(t => t.toLowerCase().includes(investigationSearch.toLowerCase()))
+  );
+
+  const toggleProfile = (profileName) => {
+    setExpandedProfiles(prev =>
+      prev.includes(profileName) ? prev.filter(p => p !== profileName) : [...prev, profileName]
+    );
+  };
+
+  const fetchRecords = async () => {
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const response = await fetch("http://localhost:8080/api/lab-records", {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setRecords(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch records:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchRecords();
+  }, []);
+
+  const handleTimeChange = (e) => {
+    const { name, value } = e.target;
+    const newTime = { ...time12h, [name]: value };
+    setTime12h(newTime);
+    
+    // Convert to 24h for backend compatibility if needed
+    // However, the current backend might just expect a date string or timestamp.
+    // If the 'date' field in formData is used for both date and time, we combine them.
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+
+    if (selectedTests.length === 0) {
+      alert("Please select at least one test.");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("jwtToken");
+      let response;
+
+      // Combine Date + 12h Time for storage
+      let hours24 = parseInt(time12h.hour);
+      if (time12h.period === "PM" && hours24 < 12) hours24 += 12;
+      if (time12h.period === "AM" && hours24 === 12) hours24 = 0;
+      
+      const formattedTime = `${hours24.toString().padStart(2, '0')}:${time12h.minute}:00`;
+      const combinedDateTime = `${formData.date}T${formattedTime}`;
+
+      if (editingRecordId) {
+        // UPDATE Existing
+        const recordPayload = {
+          test: selectedTests.join(", "),
+          name: formData.name,
+          address: formData.address,
+          contact: formData.contact,
+          gender: formData.gender,
+          age: formData.age ? parseInt(formData.age, 10) : null,
+          date: combinedDateTime,
+          reportStatus: records.find(r => r.id === editingRecordId)?.reportStatus || "PENDING"
+        };
+        response = await fetch(`http://localhost:8080/api/lab-records/${editingRecordId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify(recordPayload)
+        });
+      } else {
+        // ADD New - Single record with joined tests
+        const recordPayload = {
+          test: selectedTests.join(", "),
+          name: formData.name,
+          address: formData.address,
+          contact: formData.contact,
+          gender: formData.gender,
+          age: formData.age ? parseInt(formData.age, 10) : null,
+          date: combinedDateTime,
+          reportStatus: "PENDING"
+        };
+        response = await fetch("http://localhost:8080/api/lab-records", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify(recordPayload)
+        });
+      }
+
+      if (response.ok) {
+        await fetchRecords(); // Refresh table
+
+        // Reset form
+        setFormData({ name: "", address: "", contact: "", gender: "", age: "", date: "" });
+        setSelectedTests([]);
+        setEditingRecordId(null);
+
+      } else {
+        alert("Failed to save records");
+      }
+    } catch (error) {
+      console.error("Error saving record:", error);
+      alert("Error connecting to server");
+    }
+  };
+
+  const toISODate = (dateString) => {
+    if (!dateString) return "";
+    try {
+      const d = new Date(dateString);
+      if (isNaN(d.getTime())) return "";
+      return d.toISOString().split("T")[0];
+    } catch (e) {
+      return "";
+    }
+  };
+
+  const exportToPDF = (records) => {
+    const doc = new jsPDF();
+    doc.setFontSize(20);
+    doc.setTextColor(67, 86, 196);
+    doc.text("Sai Hospital - Lab Reports", 15, 20);
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 15, 28);
+    
+    const tableColumn = ["ID", "Patient Name", "Test(s)", "Age/Gender", "Date"];
+    const tableRows = [];
+
+    records.forEach(r => {
+        const rowData = [
+            `#${r.id}`,
+            r.name,
+            r.test,
+            `${r.age || "N/A"}Y / ${r.gender || "N/A"}`,
+            formatDate(r.date)
+        ];
+        tableRows.push(rowData);
+    });
+
+    autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 35,
+        theme: 'grid',
+        headStyles: { fillColor: [67, 86, 196] },
+        margin: { top: 35 }
+    });
+
+    doc.save(`SaiHospital_Lab_Reports_${new Date().getTime()}.pdf`);
+  };
+
+  const handleShare = async (records, platform) => {
+    const record = Array.isArray(records) ? records[0] : records;
+    const shareText = `Sai Hospital Lab Report: \nPatient: ${record.name}\nTests: ${record.test}\nDate: ${formatDate(record.date)}\nStatus: ${record.reportStatus}`;
+
+    if (platform === 'whatsapp') {
+        window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+    } else if (platform === 'email') {
+        window.open(`mailto:?subject=Lab Report: ${record.name}&body=${encodeURIComponent(shareText)}`);
+    } else if (platform === 'sms') {
+        window.open(`sms:?body=${encodeURIComponent(shareText)}`);
+    } else if (platform === 'native' || platform === 'instagram' || platform === 'snapchat') {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'Lab Report - Sai Hospital',
+                    text: shareText,
+                });
+            } catch (err) {
+                console.error("Native share failed:", err);
+            }
+        } else {
+            alert("Native sharing is not supported on this device/browser. Use WhatsApp or Email instead.");
+        }
+    }
+  };
+
+  const handleEdit = (record) => {
+    setEditingRecordId(record.id);
+    // Split the comma-separated string back into an array for multi-selection UI
+    setSelectedTests(record.test ? record.test.split(", ") : []);
+    const dateObj = new Date(record.date);
+    const h24 = dateObj.getHours();
+    const period = h24 >= 12 ? "PM" : "AM";
+    const h12 = h24 % 12 || 12;
+
+    setTime12h({
+      hour: h12.toString().padStart(2, '0'),
+      minute: dateObj.getMinutes().toString().padStart(2, '0'),
+      period: period
+    });
+
+    setFormData({
+      name: record.name || "",
+      address: record.address || "",
+      contact: record.contact || "",
+      gender: record.gender || "",
+      age: record.age || "",
+      date: toISODate(record.date)
+    });
+
+    // Smooth scroll to top where the form is located
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleDeliver = async (record) => {
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const updatedRecord = { ...record, reportStatus: "COMPLETE" };
+      const res = await fetch(`http://localhost:8080/api/lab-records/${record.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(updatedRecord)
+      });
+      if (res.ok) {
+        fetchRecords();
+      } else {
+        alert("Failed to update status");
+      }
+    } catch (err) {
+      console.error("Error updating status:", err);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Delete this lab record?")) {
+      try {
+        const token = localStorage.getItem("jwtToken");
+        const res = await fetch(`http://localhost:8080/api/lab-records/${id}`, {
+          method: "DELETE",
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        if (res.ok) {
+          fetchRecords(); // Refresh table
+          setSelectedIds(prev => prev.filter(i => i !== id));
+        } else {
+          alert("Failed to delete record");
+        }
+      } catch (err) {
+        console.error("Error deleting record:", err);
+      }
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (window.confirm(`Are you sure you want to delete ${selectedIds.length} lab records?`)) {
+      try {
+        const token = localStorage.getItem("jwtToken");
+        const deletePromises = selectedIds.map(id =>
+          fetch(`http://localhost:8080/api/lab-records/${id}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${token}` }
+          })
+        );
+        await Promise.all(deletePromises);
+        fetchRecords();
+        setSelectedIds([]);
+      } catch (err) {
+        console.error("Bulk delete failed:", err);
+      }
+    }
+  };
+
+  const toggleSelect = (id) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = () => {
+    const allIds = filteredRecords.map(r => r.id);
+    const areAllSelected = allIds.every(id => selectedIds.includes(id));
+
+    if (areAllSelected) {
+      setSelectedIds(prev => prev.filter(id => !allIds.includes(id)));
+    } else {
+      setSelectedIds(prev => [...new Set([...prev, ...allIds])]);
+    }
+  };
+
+  const filteredRecords = records.filter(r => {
+    const matchSearch = (r.name || "").toLowerCase().includes(recordSearch.toLowerCase()) ||
+      (r.test || "").toLowerCase().includes(recordSearch.toLowerCase());
+    const matchDate = recordDate ? r.date === recordDate : true;
+    const matchStatus = statusFilter ? r.reportStatus === statusFilter : true;
+    return matchSearch && matchDate && matchStatus;
+  });
+
+  const completedCount = records.filter(r => r.reportStatus === "COMPLETE").length;
+  const pendingCount = records.filter(r => r.reportStatus === "PENDING").length;
+
+  return (
+    <div className="lab-admin-page">
+
+      {/* BULK ACTION BAR */}
+      {selectedIds.length > 0 && (
+        <div className="bulk-action-bar">
+          <span className="selection-count">{selectedIds.length} records selected</span>
+          
+          {activeSubTab === "lab_completed" && (
+              <>
+                  <button 
+                      className="bulk-pdf-btn" 
+                      onClick={() => {
+                          const selectedRecords = records.filter(r => selectedIds.includes(r.id));
+                          exportToPDF(selectedRecords);
+                      }}
+                      style={{ background: '#4356c4', color: 'white' }}
+                  >
+                      <i className="fa-solid fa-file-pdf"></i> Download PDF
+                  </button>
+                  <button 
+                      className="bulk-share-btn" 
+                      onClick={() => {
+                          const selectedRecords = records.filter(r => selectedIds.includes(r.id));
+                          handleShare(selectedRecords, 'whatsapp');
+                      }}
+                      style={{ background: '#25D366', color: 'white' }}
+                      title="Share via WhatsApp"
+                  >
+                      <i className="fa-brands fa-whatsapp"></i>
+                  </button>
+                  <button 
+                      className="bulk-share-btn" 
+                      onClick={() => {
+                          const selectedRecords = records.filter(r => selectedIds.includes(r.id));
+                          handleShare(selectedRecords, 'sms');
+                      }}
+                      style={{ background: '#3b82f6', color: 'white' }}
+                      title="Share via SMS"
+                  >
+                      <i className="fa-solid fa-comment-sms"></i>
+                  </button>
+              </>
+          )}
+
+          <button className="bulk-delete-btn" onClick={handleBulkDelete}>
+            <i className="fa-solid fa-trash"></i> Delete Selected
+          </button>
+          <button className="global-back-btn" onClick={() => setSelectedIds([])} style={{ margin: 0, padding: "8px 15px" }}>
+            Cancel
+          </button>
+        </div>
+      )}
+
+      <div className="lab-admin-container">
+        {/* GRID TEST LIST - Only for Test Requests */}
+        {(activeSubTab === "lab" || activeSubTab === "lab_requests") && (
+          <div style={{ width: '100%' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <button className="global-back-btn" onClick={onBack} style={{ margin: 0, padding: '8px 15px' }}>
+                  <i className="fa-solid fa-arrow-left"></i> Back
+                </button>
+                <h3 style={{ margin: 0, color: 'var(--primary)', fontSize: '20px' }}>Select Investigation</h3>
+              </div>
+              <input
+                type="text"
+                placeholder="Search investigations..."
+                className="search-input"
+                value={investigationSearch}
+                onChange={(e) => setInvestigationSearch(e.target.value)}
+                style={{ maxWidth: '350px', marginBottom: 0 }}
+              />
+            </div>
+
+            <div className="lab-test-list" style={{ display: 'block' }}>
+              {filteredProfiles.map((tp, pIndex) => {
+                const isExpanded = expandedProfiles.includes(tp.profile);
+                const allSelected = tp.tests.every(t => selectedTests.includes(t));
+                const someSelected = tp.tests.some(t => selectedTests.includes(t));
+
+                return (
+                  <div key={pIndex} className="lab-profile-group" style={{ background: 'white', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '10px' }}>
+                    <div 
+                      className={`lab-profile-header ${someSelected ? 'has-selection' : ''}`}
+                      onClick={() => toggleProfile(tp.profile)}
+                      style={{ 
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+                        padding: '12px 16px', background: someSelected ? '#eff6ff' : 'white', cursor: 'pointer',
+                        borderBottom: isExpanded ? '1px solid #e2e8f0' : 'none'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <button className="add-btn" style={{ 
+                          width: '24px', height: '24px', borderRadius: '4px', border: '1px solid #cbd5e1', 
+                          background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer', padding: 0
+                        }} onClick={(e) => { e.stopPropagation(); toggleProfile(tp.profile); }}>
+                          <i className={`fa-solid fa-${isExpanded ? 'minus' : 'plus'}`} style={{ fontSize: '12px' }}></i>
+                        </button>
+                        <span style={{ fontWeight: 600, color: '#1e293b', fontSize: '15px' }}>
+                          {tp.profile}
+                          {someSelected && <span style={{ marginLeft: '10px', fontSize: '11px', background: 'var(--primary)', color: 'white', padding: '2px 6px', borderRadius: '12px' }}>
+                            {tp.tests.filter(t => selectedTests.includes(t)).length}/{tp.tests.length}
+                          </span>}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {isExpanded && (
+                      <div className="lab-profile-tests" style={{ padding: '12px 16px', display: 'flex', flexWrap: 'wrap', gap: '8px', background: '#f8fafc' }}>
+                        {tp.tests.map((test, tIndex) => (
+                           <div
+                              key={tIndex}
+                              className={`lab-test-item sub-test ${selectedTests.includes(test) ? 'selected' : ''}`}
+                              onClick={(e) => { e.stopPropagation(); toggleTestSelection(test); }}
+                              style={{ 
+                                cursor: 'pointer', border: '1px solid #cbd5e1', padding: '6px 12px', 
+                                borderRadius: '20px', display: 'inline-flex', alignItems: 'center', gap: '8px',
+                                background: selectedTests.includes(test) ? 'var(--primary)' : 'white',
+                                color: selectedTests.includes(test) ? 'white' : '#475569',
+                                fontSize: '13px', margin: 0, 
+                                minHeight: '30px'
+                              }}
+                           >
+                              <span style={{ fontSize: '13px', color: selectedTests.includes(test) ? 'white' : '#475569' }}>{test}</span>
+                              <button className="add-btn" style={{ 
+                                width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                background: selectedTests.includes(test) ? 'rgba(255,255,255,0.2)' : '#e2e8f0',
+                                color: selectedTests.includes(test) ? 'white' : '#64748b',
+                                borderRadius: '50%', border: 'none', cursor: 'pointer',
+                                padding: 0, margin: 0, fontSize: '14px'
+                              }} onClick={(e) => { e.stopPropagation(); toggleTestSelection(test); }}>
+                                {selectedTests.includes(test) ? '−' : '+'}
+                              </button>
+                           </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+        {/* RIGHT SIDE FORM - Only for Test Requests */}
+        {(activeSubTab === "lab" || activeSubTab === "lab_requests") && selectedTests.length > 0 && (
+          <div className="lab-form-card">
+            <h3>{editingRecordId ? "Edit" : "New"} Investigation{selectedTests.length > 1 ? 's' : ''}</h3>
+
+            {!editingRecordId && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '15px' }}>
+                {selectedTests.map(test => (
+                  <span key={test} style={{
+                    background: 'var(--primary)',
+                    color: 'white',
+                    padding: '4px 12px',
+                    borderRadius: '20px',
+                    fontSize: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}>
+                    {test}
+                    <span
+                      onClick={() => toggleTestSelection(test)}
+                      style={{ cursor: 'pointer', fontWeight: 'bold' }}
+                    >×</span>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <form className="lab-entry-form" onSubmit={handleSave}>
+              <div className="lab-form-group">
+                <label><i className="fa-solid fa-user"></i> Patient Name</label>
+                <input placeholder="Enter Patient Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
+              </div>
+              <div className="lab-form-group">
+                <label><i className="fa-solid fa-location-dot"></i> Patient Address</label>
+                <input placeholder="Enter Patient Address" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
+              </div>
+              <div className="form-row-lab">
+                <div className="lab-form-group">
+                  <label><i className="fa-solid fa-phone"></i> Contact</label>
+                  <input placeholder="Contact Number" value={formData.contact} onChange={(e) => setFormData({ ...formData, contact: e.target.value })} />
+                </div>
+                <div className="lab-form-group">
+                  <label><i className="fa-solid fa-venus-mars"></i> Gender</label>
+                  <select value={formData.gender} onChange={(e) => setFormData({ ...formData, gender: e.target.value })}>
+                    <option value="">Select Gender</option>
+                    <option>Male</option>
+                    <option>Female</option>
+                  </select>
+                </div>
+              </div>
+              <div className="form-row-lab">
+                <div className="lab-form-group">
+                  <label><i className="fa-solid fa-cake-candles"></i> Age</label>
+                  <input type="number" placeholder="Age" value={formData.age} onChange={(e) => setFormData({ ...formData, age: e.target.value })} />
+                </div>
+                <div className="lab-form-group">
+                  <label><i className="fa-solid fa-calendar-day"></i> Date</label>
+                  <input type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} required />
+                </div>
+              </div>
+              
+              <div className="lab-form-group">
+                <label><i className="fa-solid fa-clock"></i> Investigation Time</label>
+                <div className="time-select-group">
+                  <select name="hour" value={time12h.hour} onChange={handleTimeChange}>
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map(h => (
+                      <option key={h} value={h.toString().padStart(2, '0')}>{h}</option>
+                    ))}
+                  </select>
+                  <span className="time-sep">:</span>
+                  <select name="minute" value={time12h.minute} onChange={handleTimeChange}>
+                    {["00", "15", "30", "45"].map(m => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                  <select name="period" value={time12h.period} onChange={handleTimeChange}>
+                    <option value="AM">AM</option>
+                    <option value="PM">PM</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="submit-container-lab" style={{ marginTop: '20px' }}>
+                <button className="primary-btn">
+                  <i className="fa-solid fa-save"></i> {editingRecordId ? "Update Record" : `Save ${selectedTests.length} Record${selectedTests.length > 1 ? 's' : ''}`}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+      </div>
+
+      {/* SAVED RECORDS CARDS - Only for Pending/Completed or all Lab context */}
+      {(activeSubTab === "lab_pending" || activeSubTab === "lab_completed" || activeSubTab === "lab") && records.length > 0 && (
+        <div className="universal-section" style={{ marginTop: '50px' }}>
+          
+          {activeSubTab === "lab_pending" && (
+            <div className="summary-header-premium">
+              <div className="metric-card-horizontal pending">
+                <div className="m-icon-large">
+                  <i className="fa-solid fa-hourglass-half"></i>
+                </div>
+                <div className="m-info-large">
+                  <h2>Pending Lab Reports</h2>
+                  <p>In-progress investigations that are currently being processed in the laboratory.</p>
+                </div>
+                <div className="m-stat-large">
+                  <span className="count">{pendingCount}</span>
+                  <span className="label">Awaiting Result</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeSubTab === "lab_completed" && (
+            <div className="summary-header-premium">
+              <div className="metric-card-horizontal">
+                <div className="m-icon-large">
+                  <i className="fa-solid fa-check-double"></i>
+                </div>
+                <div className="m-info-large">
+                  <h2>Completed Lab Investigations</h2>
+                  <p>All laboratory tests that have been processed and delivered to patients.</p>
+                </div>
+                <div className="m-stat-large">
+                  <span className="count">{completedCount}</span>
+                  <span className="label">Total Reports</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap', gap: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+              <button className="global-back-btn" onClick={onBack} style={{ margin: 0, padding: '8px 15px' }}>
+                <i className="fa-solid fa-arrow-left"></i> Back
+              </button>
+            </div>
+            <div className="filters-container" style={{ display: 'flex', gap: '10px' }}>
+              <div className="search-bar-premium" style={{ border: '1px solid #e2e8f0', background: 'white' }}>
+                <i className="fa-solid fa-magnifying-glass"></i>
+                <input
+                  type="text"
+                  placeholder="Search records..."
+                  value={recordSearch}
+                  onChange={(e) => setRecordSearch(e.target.value)}
+                />
+              </div>
+              <input
+                type="date"
+                className="premium-date-input"
+                value={recordDate}
+                onChange={(e) => setRecordDate(e.target.value)}
+                style={{ padding: '8px', borderRadius: '10px', border: '1px solid #e2e8f0' }}
+              />
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <input
+              type="checkbox"
+              className="table-checkbox"
+              checked={filteredRecords.length > 0 && filteredRecords.every(r => selectedIds.includes(r.id))}
+              onChange={(e) => { e.stopPropagation(); handleSelectAll(); }}
+              onClick={(e) => e.stopPropagation()}
+            />
+            <span style={{ fontWeight: 600, color: '#64748b', fontSize: '14px' }}>Select All Records</span>
+          </div>
+
+          {activeSubTab !== "lab_completed" ? (
+            <div className="universal-grid">
+              {filteredRecords.length === 0 ? (
+                <div className="no-results" style={{ gridColumn: '1/-1', background: 'white', padding: '40px', borderRadius: '16px', textAlign: 'center' }}>
+                  <i className="fa-solid fa-folder-open" style={{ fontSize: '30px', color: '#cbd5e1', marginBottom: '10px', display: 'block' }}></i>
+                  <p>No records match filters</p>
+                </div>
+              ) : (
+                filteredRecords.map(record => (
+                  <div key={record.id} className={`universal-card ${selectedIds.includes(record.id) ? 'selected' : ''}`}>
+                    <div className="u-card-checkbox">
+                      <input
+                        type="checkbox"
+                        className="table-checkbox"
+                        checked={selectedIds.includes(record.id)}
+                        onChange={(e) => { e.stopPropagation(); toggleSelect(record.id); }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                    <div className="u-card-header">
+                      <div className="u-card-avatar" style={{ background: '#e0e7ff', color: '#4f46e5' }}>{getInitials(record.name)}</div>
+                      <div className="u-card-title-group">
+                        <h3>{record.name}</h3>
+                        <span className="u-card-badge">{record.age}Y • {record.gender}</span>
+                      </div>
+                      <div className={`u-card-status-dot ${record.reportStatus === 'COMPLETE' ? 'active' : ''}`}></div>
+                    </div>
+
+                    <div className="u-card-info-box">
+                      <div className="u-info-item">
+                        <i className="fa-solid fa-vial"></i>
+                        <span style={{ fontWeight: 700, color: '#1e293b' }}>{record.test}</span>
+                      </div>
+                      <div className="u-info-item">
+                        <i className="fa-solid fa-phone"></i>
+                        <span>{record.contact || "No Contact"}</span>
+                      </div>
+                      <div className="u-info-item">
+                        <i className="fa-solid fa-location-dot"></i>
+                        <span>{record.address || "No Address"}</span>
+                      </div>
+                    </div>
+
+                    <div className="u-card-footer">
+                      <div className="u-footer-col">
+                        <span className="u-footer-label">Test Date</span>
+                        <span className="u-footer-value">{formatDate(record.date)}</span>
+                      </div>
+                      <div className="u-footer-col">
+                        <span className="u-footer-label">Status</span>
+                        <span className={`u-footer-value ${record.reportStatus === 'COMPLETE' ? 'success' : ''}`}>
+                          {record.reportStatus || "PENDING"}
+                        </span>
+                      </div>
+                      <div className="u-card-actions">
+                        {record.reportStatus !== "COMPLETE" && (
+                          <button
+                            className="u-action-btn discharge"
+                            style={{ background: '#dcfce7', color: '#16a34a' }}
+                            onClick={(e) => { e.stopPropagation(); handleDeliver(record); }}
+                            title="Deliver Report"
+                          >
+                            <i className="fa-solid fa-truck-fast"></i> Deliver
+                          </button>
+                        )}
+                        {record.reportStatus !== "COMPLETE" && (
+                          <button className="u-action-btn edit" onClick={(e) => { e.stopPropagation(); handleEdit(record); }} title="Edit">
+                            <i className="fa-solid fa-pen"></i>
+                          </button>
+                        )}
+                        <button className="u-action-btn delete" onClick={(e) => { e.stopPropagation(); handleDelete(record.id); }} title="Delete">
+                          <i className="fa-solid fa-trash"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          ) : (
+            <div className="appointment-cards-list">
+              {filteredRecords.length === 0 ? (
+                <div className="no-results" style={{ background: 'white', padding: '60px', borderRadius: '20px', textAlign: 'center', border: '2px dashed #e2e8f0' }}>
+                  <i className="fa-solid fa-folder-open" style={{ fontSize: '40px', color: '#cbd5e1', marginBottom: '15px', display: 'block' }}></i>
+                  <p style={{ color: '#64748b', fontSize: '16px' }}>No completed lab records found.</p>
+                </div>
+              ) : (
+                filteredRecords.map(record => (
+                  <div key={record.id} className={`appointment-card-horizontal ${selectedIds.includes(record.id) ? "row-selected" : ""}`} style={{ padding: '24px 28px' }}>
+                    <div className="app-card-checkbox">
+                      <input
+                        type="checkbox"
+                        className="table-checkbox"
+                        checked={selectedIds.includes(record.id)}
+                        onChange={(e) => { e.stopPropagation(); toggleSelect(record.id); }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                    <div className="app-card-main" style={{ flex: '1.2' }}>
+                      <div className="app-card-avatar" style={{ 
+                          background: '#dcfce7', 
+                          color: '#16a34a', 
+                          boxShadow: '0 4px 10px rgba(22, 163, 74, 0.15)',
+                          width: '56px', height: '56px', fontSize: '18px'
+                      }}>
+                          {getInitials(record.name)}
+                      </div>
+                      <div className="app-card-info">
+                        <h3 style={{ fontSize: '18px', color: '#1e293b', marginBottom: '4px' }}>{record.name}</h3>
+                        <span className="app-card-id" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><i className="fa-solid fa-hashtag" style={{ color: '#94a3b8', fontSize: '11px' }}></i> {record.id}</span>
+                      </div>
+                    </div>
+                    <div className="app-card-details" style={{ flex: 2.2, display: 'flex', gap: '25px', backgroundColor: '#f8fafc', padding: '16px 24px', borderRadius: '14px', border: '1px solid #f1f5f9' }}>
+                      <div className="app-detail-group" style={{ flex: 1 }}>
+                        <span className="app-detail-label" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}><i className="fa-solid fa-vial" style={{ color: '#6366f1', fontSize: '14px' }}></i> Test(s) Conducted</span>
+                        <span className="app-detail-value">
+                          <div style={{ fontWeight: 600, color: '#334155', fontSize: '15px' }}>{record.test}</div>
+                          <div style={{ color: '#64748b', fontSize: '13px', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}><i className="fa-solid fa-user" style={{ color: '#94a3b8' }}></i> {record.age}Y • {record.gender}</div>
+                        </span>
+                      </div>
+                      <div className="app-detail-group" style={{ flex: 1, borderLeft: '1.5px solid #e2e8f0', paddingLeft: '25px' }}>
+                        <span className="app-detail-label" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}><i className="fa-solid fa-truck-fast" style={{ color: '#f59e0b', fontSize: '14px' }}></i> Delivery Date</span>
+                        <span className="app-detail-value">
+                          <div style={{ fontWeight: 600, color: '#334155', fontSize: '15px' }}>{formatDate(record.date)}</div>
+                          <div style={{ color: '#64748b', fontSize: '13px', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}><i className="fa-solid fa-phone" style={{ color: '#94a3b8', fontSize: '12px' }}></i> {record.contact || "No Contact"}</div>
+                        </span>
+                      </div>
+                    </div>
+                    <div className="app-card-status" style={{ minWidth: '140px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ textAlign: 'center' }}>
+                          <span className="status completed" style={{ padding: '6px 14px', borderRadius: '8px', fontWeight: 700, fontSize: '13px', boxShadow: '0 2px 4px rgba(3, 105, 161, 0.1)' }}>Complete</span>
+                      </div>
+                    </div>
+                    <div className="app-card-actions" style={{ marginLeft: '10px' }}>
+                      <button className="u-action-btn delete" onClick={(e) => { e.stopPropagation(); handleDelete(record.id); }} title="Delete Record">
+                          <i className="fa-solid fa-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default LabAdmin;
