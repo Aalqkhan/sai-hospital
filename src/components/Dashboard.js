@@ -572,6 +572,26 @@ Date: ${formatDate(record.appointmentDate)}`;
     const rejected = data.filter(a => a.status === "REJECTED").length;
     const completed = data.filter(a => a.visitStatus === "COMPLETED").length;
 
+    if (activePage === "appointments_completed") {
+      return (
+        <div className="horizontal-summary-banner">
+          <div className="h-summary-left">
+            <div className="h-summary-icon">
+              <i className="fa-solid fa-calendar-check"></i>
+            </div>
+            <div className="h-summary-text">
+              <h2>Completed Visits</h2>
+              <p>Total number of patients who have completed their consultation and treatment today.</p>
+            </div>
+          </div>
+          <div className="h-summary-right">
+            <span className="h-summary-number">{completed}</span>
+            <span className="h-summary-label">Total Visits</span>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className={`metrics-grid ${activePage === "appointments_completed" ? "completed-summary" : ""}`} style={{ marginBottom: '30px' }}>
         <div className="metric-card-premium m-appt">
@@ -982,7 +1002,11 @@ Date: ${formatDate(record.appointmentDate)}`;
                       <div className="u-card-info-box">
                         <div className="u-info-item">
                           <i className="fa-solid fa-stethoscope"></i>
-                          <span>{app.disease}</span>
+                          <span style={{ fontWeight: 700 }}>{app.disease}</span>
+                        </div>
+                        <div className="u-info-item">
+                          <i className="fa-solid fa-phone"></i>
+                          <span>{app.phone || app.contact || "No Contact"}</span>
                         </div>
                       </div>
 
@@ -1138,24 +1162,32 @@ Date: ${formatDate(record.appointmentDate)}`;
             </div>
           )}
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '15px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-              {activePage !== "appointments" && (
-                <button className="global-back-btn" onClick={() => setActivePage("appointments")} style={{ margin: 0, padding: '8px 15px' }}>
-                  <i className="fa-solid fa-arrow-left"></i> Back
-                </button>
-              )}
-              <h2 style={{ margin: 0, fontSize: '20px', color: 'var(--primary)' }}>
-                {activePage === "appointments" ? "Hospital Overview" :
-                  activePage === "appointments_completed" ? "VISITED/COMPLETED" :
+          {activePage === "appointments_completed" && renderAppointmentSummary(filteredAppointments)}
+
+          {activePage !== "appointments_completed" && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '15px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                {activePage !== "appointments" && (
+                  <button className="global-back-btn" onClick={() => setActivePage("appointments")} style={{ margin: 0, padding: '8px 15px' }}>
+                    <i className="fa-solid fa-arrow-left"></i> Back
+                  </button>
+                )}
+                <h2 style={{ margin: 0, fontSize: '20px', color: 'var(--primary)' }}>
+                  {activePage === "appointments" ? "Hospital Overview" :
                     activePage.replace('appointments_', '').replace(/_/g, ' ').toUpperCase()}
-              </h2>
+                </h2>
+              </div>
             </div>
-          </div>
+          )}
 
           {activePage !== "appointments" && (
             <>
               <div className="filters-container" style={{ display: 'flex', gap: '15px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+                {activePage === "appointments_completed" && (
+                  <button className="global-back-btn" onClick={() => setActivePage("appointments")} style={{ margin: 0, padding: '8px 15px' }}>
+                    <i className="fa-solid fa-arrow-left"></i> Back
+                  </button>
+                )}
                 <input
                   type="text"
                   placeholder="Search Appointments..."
@@ -1177,9 +1209,7 @@ Date: ${formatDate(record.appointmentDate)}`;
                 </button>
               </div>
 
-              {activePage === "appointments_completed"
-                ? renderAppointmentSummary(filteredAppointments)
-                : null}
+
 
               {activePage === "appointments_completed"
                 ? renderAppointmentCards(filteredAppointments)
@@ -1449,7 +1479,7 @@ Date: ${formatDate(record.appointmentDate)}`;
         </nav>
       </aside>
 
-      <main className="admin-content">
+      <main className={`admin-content ${(activePage === "lab" || activePage.startsWith("lab_")) ? "full-width-module" : ""}`}>
         {renderContent()}
       </main>
 

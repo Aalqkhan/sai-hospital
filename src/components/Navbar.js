@@ -29,7 +29,7 @@ function Navbar() {
       </div>
 
       <div className={`nav-links ${isOpen ? "active" : ""}`}>
-        {location.pathname !== "/" && location.pathname !== "/dashboard" && (
+        {!["/", "/dashboard", "/login", "/admin"].includes(location.pathname) && (
           <Link to="/" onClick={closeMenu}>Home</Link>
         )}
         

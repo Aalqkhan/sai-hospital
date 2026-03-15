@@ -36,7 +36,7 @@ function LabAdmin({ onBack, activeSubTab }) {
   const [editingRecordId, setEditingRecordId] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
   const [statusFilter, setStatusFilter] = useState("");
-  
+
   // 12-hour Time State
   const [time12h, setTime12h] = useState({
     hour: "10",
@@ -127,7 +127,7 @@ function LabAdmin({ onBack, activeSubTab }) {
     const { name, value } = e.target;
     const newTime = { ...time12h, [name]: value };
     setTime12h(newTime);
-    
+
     // Convert to 24h for backend compatibility if needed
     // However, the current backend might just expect a date string or timestamp.
     // If the 'date' field in formData is used for both date and time, we combine them.
@@ -149,7 +149,7 @@ function LabAdmin({ onBack, activeSubTab }) {
       let hours24 = parseInt(time12h.hour);
       if (time12h.period === "PM" && hours24 < 12) hours24 += 12;
       if (time12h.period === "AM" && hours24 === 12) hours24 = 0;
-      
+
       const formattedTime = `${hours24.toString().padStart(2, '0')}:${time12h.minute}:00`;
       const combinedDateTime = `${formData.date}T${formattedTime}`;
 
@@ -231,28 +231,28 @@ function LabAdmin({ onBack, activeSubTab }) {
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text(`Generated on: ${new Date().toLocaleString()}`, 15, 28);
-    
+
     const tableColumn = ["ID", "Patient Name", "Test(s)", "Age/Gender", "Date"];
     const tableRows = [];
 
     records.forEach(r => {
-        const rowData = [
-            `#${r.id}`,
-            r.name,
-            r.test,
-            `${r.age || "N/A"}Y / ${r.gender || "N/A"}`,
-            formatDate(r.date)
-        ];
-        tableRows.push(rowData);
+      const rowData = [
+        `#${r.id}`,
+        r.name,
+        r.test,
+        `${r.age || "N/A"}Y / ${r.gender || "N/A"}`,
+        formatDate(r.date)
+      ];
+      tableRows.push(rowData);
     });
 
     autoTable(doc, {
-        head: [tableColumn],
-        body: tableRows,
-        startY: 35,
-        theme: 'grid',
-        headStyles: { fillColor: [67, 86, 196] },
-        margin: { top: 35 }
+      head: [tableColumn],
+      body: tableRows,
+      startY: 35,
+      theme: 'grid',
+      headStyles: { fillColor: [67, 86, 196] },
+      margin: { top: 35 }
     });
 
     doc.save(`SaiHospital_Lab_Reports_${new Date().getTime()}.pdf`);
@@ -263,24 +263,24 @@ function LabAdmin({ onBack, activeSubTab }) {
     const shareText = `Sai Hospital Lab Report: \nPatient: ${record.name}\nTests: ${record.test}\nDate: ${formatDate(record.date)}\nStatus: ${record.reportStatus}`;
 
     if (platform === 'whatsapp') {
-        window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+      window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
     } else if (platform === 'email') {
-        window.open(`mailto:?subject=Lab Report: ${record.name}&body=${encodeURIComponent(shareText)}`);
+      window.open(`mailto:?subject=Lab Report: ${record.name}&body=${encodeURIComponent(shareText)}`);
     } else if (platform === 'sms') {
-        window.open(`sms:?body=${encodeURIComponent(shareText)}`);
+      window.open(`sms:?body=${encodeURIComponent(shareText)}`);
     } else if (platform === 'native' || platform === 'instagram' || platform === 'snapchat') {
-        if (navigator.share) {
-            try {
-                await navigator.share({
-                    title: 'Lab Report - Sai Hospital',
-                    text: shareText,
-                });
-            } catch (err) {
-                console.error("Native share failed:", err);
-            }
-        } else {
-            alert("Native sharing is not supported on this device/browser. Use WhatsApp or Email instead.");
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'Lab Report - Sai Hospital',
+            text: shareText,
+          });
+        } catch (err) {
+          console.error("Native share failed:", err);
         }
+      } else {
+        alert("Native sharing is not supported on this device/browser. Use WhatsApp or Email instead.");
+      }
     }
   };
 
@@ -410,42 +410,42 @@ function LabAdmin({ onBack, activeSubTab }) {
       {selectedIds.length > 0 && (
         <div className="bulk-action-bar">
           <span className="selection-count">{selectedIds.length} records selected</span>
-          
+
           {activeSubTab === "lab_completed" && (
-              <>
-                  <button 
-                      className="bulk-pdf-btn" 
-                      onClick={() => {
-                          const selectedRecords = records.filter(r => selectedIds.includes(r.id));
-                          exportToPDF(selectedRecords);
-                      }}
-                      style={{ background: '#4356c4', color: 'white' }}
-                  >
-                      <i className="fa-solid fa-file-pdf"></i> Download PDF
-                  </button>
-                  <button 
-                      className="bulk-share-btn" 
-                      onClick={() => {
-                          const selectedRecords = records.filter(r => selectedIds.includes(r.id));
-                          handleShare(selectedRecords, 'whatsapp');
-                      }}
-                      style={{ background: '#25D366', color: 'white' }}
-                      title="Share via WhatsApp"
-                  >
-                      <i className="fa-brands fa-whatsapp"></i>
-                  </button>
-                  <button 
-                      className="bulk-share-btn" 
-                      onClick={() => {
-                          const selectedRecords = records.filter(r => selectedIds.includes(r.id));
-                          handleShare(selectedRecords, 'sms');
-                      }}
-                      style={{ background: '#3b82f6', color: 'white' }}
-                      title="Share via SMS"
-                  >
-                      <i className="fa-solid fa-comment-sms"></i>
-                  </button>
-              </>
+            <>
+              <button
+                className="bulk-pdf-btn"
+                onClick={() => {
+                  const selectedRecords = records.filter(r => selectedIds.includes(r.id));
+                  exportToPDF(selectedRecords);
+                }}
+                style={{ background: '#4356c4', color: 'white' }}
+              >
+                <i className="fa-solid fa-file-pdf"></i> Download PDF
+              </button>
+              <button
+                className="bulk-share-btn"
+                onClick={() => {
+                  const selectedRecords = records.filter(r => selectedIds.includes(r.id));
+                  handleShare(selectedRecords, 'whatsapp');
+                }}
+                style={{ background: '#25D366', color: 'white' }}
+                title="Share via WhatsApp"
+              >
+                <i className="fa-brands fa-whatsapp"></i>
+              </button>
+              <button
+                className="bulk-share-btn"
+                onClick={() => {
+                  const selectedRecords = records.filter(r => selectedIds.includes(r.id));
+                  handleShare(selectedRecords, 'sms');
+                }}
+                style={{ background: '#3b82f6', color: 'white' }}
+                title="Share via SMS"
+              >
+                <i className="fa-solid fa-comment-sms"></i>
+              </button>
+            </>
           )}
 
           <button className="bulk-delete-btn" onClick={handleBulkDelete}>
@@ -458,46 +458,66 @@ function LabAdmin({ onBack, activeSubTab }) {
       )}
 
       <div className="lab-admin-container">
+
         {/* GRID TEST LIST - Only for Test Requests */}
         {(activeSubTab === "lab" || activeSubTab === "lab_requests") && (
-          <div style={{ width: '100%' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <button className="global-back-btn" onClick={onBack} style={{ margin: 0, padding: '8px 15px' }}>
-                  <i className="fa-solid fa-arrow-left"></i> Back
-                </button>
-                <h3 style={{ margin: 0, color: 'var(--primary)', fontSize: '20px' }}>Select Investigation</h3>
+          <div style={{ width: '100%', animation: 'fadeIn 0.4s ease-out' }}>
+            <div className="filters-container" style={{ display: 'flex', gap: '15px', marginBottom: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <button className="global-back-btn" onClick={onBack} style={{ margin: 0, padding: '8px 15px' }}>
+                <i className="fa-solid fa-arrow-left"></i> Back
+              </button>
+              <div className="search-bar-premium" style={{ border: '1px solid #e2e8f0', background: 'white', flex: 1 }}>
+                <i className="fa-solid fa-magnifying-glass"></i>
+                <input
+                  type="text"
+                  placeholder="Search investigations..."
+                  value={investigationSearch}
+                  onChange={(e) => setInvestigationSearch(e.target.value)}
+                />
               </div>
-              <input
-                type="text"
-                placeholder="Search investigations..."
-                className="search-input"
-                value={investigationSearch}
-                onChange={(e) => setInvestigationSearch(e.target.value)}
-                style={{ maxWidth: '350px', marginBottom: 0 }}
-              />
+              <button
+                className="clear-filters-btn"
+                onClick={() => setInvestigationSearch("")}
+                style={{
+                  padding: '8px 15px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: '#e2e8f0',
+                  color: '#64748b',
+                  fontWeight: '700',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  height: '42px'
+                }}
+              >
+                Clear Filters
+              </button>
+              <div style={{ fontWeight: 700, color: '#475569', fontSize: '13px', background: '#f1f5f9', padding: '8px 15px', borderRadius: '10px' }}>
+                <i className="fa-solid fa-microscope" style={{ marginRight: '8px', color: '#6366f1' }}></i>
+                Select Investigation
+              </div>
             </div>
 
-            <div className="lab-test-list" style={{ display: 'block' }}>
+            <div className="lab-test-list-grid">
               {filteredProfiles.map((tp, pIndex) => {
                 const isExpanded = expandedProfiles.includes(tp.profile);
                 const allSelected = tp.tests.every(t => selectedTests.includes(t));
                 const someSelected = tp.tests.some(t => selectedTests.includes(t));
 
                 return (
-                  <div key={pIndex} className="lab-profile-group" style={{ background: 'white', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '10px' }}>
-                    <div 
+                  <div key={pIndex} className="lab-profile-group-horizontal" style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                    <div
                       className={`lab-profile-header ${someSelected ? 'has-selection' : ''}`}
                       onClick={() => toggleProfile(tp.profile)}
-                      style={{ 
-                        display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+                      style={{
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                         padding: '12px 16px', background: someSelected ? '#eff6ff' : 'white', cursor: 'pointer',
                         borderBottom: isExpanded ? '1px solid #e2e8f0' : 'none'
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <button className="add-btn" style={{ 
-                          width: '24px', height: '24px', borderRadius: '4px', border: '1px solid #cbd5e1', 
+                        <button className="add-btn" style={{
+                          width: '24px', height: '24px', borderRadius: '4px', border: '1px solid #cbd5e1',
                           background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer', padding: 0
                         }} onClick={(e) => { e.stopPropagation(); toggleProfile(tp.profile); }}>
                           <i className={`fa-solid fa-${isExpanded ? 'minus' : 'plus'}`} style={{ fontSize: '12px' }}></i>
@@ -510,34 +530,34 @@ function LabAdmin({ onBack, activeSubTab }) {
                         </span>
                       </div>
                     </div>
-                    
+
                     {isExpanded && (
                       <div className="lab-profile-tests" style={{ padding: '12px 16px', display: 'flex', flexWrap: 'wrap', gap: '8px', background: '#f8fafc' }}>
                         {tp.tests.map((test, tIndex) => (
-                           <div
-                              key={tIndex}
-                              className={`lab-test-item sub-test ${selectedTests.includes(test) ? 'selected' : ''}`}
-                              onClick={(e) => { e.stopPropagation(); toggleTestSelection(test); }}
-                              style={{ 
-                                cursor: 'pointer', border: '1px solid #cbd5e1', padding: '6px 12px', 
-                                borderRadius: '20px', display: 'inline-flex', alignItems: 'center', gap: '8px',
-                                background: selectedTests.includes(test) ? 'var(--primary)' : 'white',
-                                color: selectedTests.includes(test) ? 'white' : '#475569',
-                                fontSize: '13px', margin: 0, 
-                                minHeight: '30px'
-                              }}
-                           >
-                              <span style={{ fontSize: '13px', color: selectedTests.includes(test) ? 'white' : '#475569' }}>{test}</span>
-                              <button className="add-btn" style={{ 
-                                width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                background: selectedTests.includes(test) ? 'rgba(255,255,255,0.2)' : '#e2e8f0',
-                                color: selectedTests.includes(test) ? 'white' : '#64748b',
-                                borderRadius: '50%', border: 'none', cursor: 'pointer',
-                                padding: 0, margin: 0, fontSize: '14px'
-                              }} onClick={(e) => { e.stopPropagation(); toggleTestSelection(test); }}>
-                                {selectedTests.includes(test) ? '−' : '+'}
-                              </button>
-                           </div>
+                          <div
+                            key={tIndex}
+                            className={`lab-test-item sub-test ${selectedTests.includes(test) ? 'selected' : ''}`}
+                            onClick={(e) => { e.stopPropagation(); toggleTestSelection(test); }}
+                            style={{
+                              cursor: 'pointer', border: '1px solid #cbd5e1', padding: '6px 12px',
+                              borderRadius: '20px', display: 'inline-flex', alignItems: 'center', gap: '8px',
+                              background: selectedTests.includes(test) ? 'var(--primary)' : 'white',
+                              color: selectedTests.includes(test) ? 'white' : '#475569',
+                              fontSize: '13px', margin: 0,
+                              minHeight: '30px'
+                            }}
+                          >
+                            <span style={{ fontSize: '13px', color: selectedTests.includes(test) ? 'white' : '#475569' }}>{test}</span>
+                            <button className="add-btn" style={{
+                              width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              background: selectedTests.includes(test) ? 'rgba(255,255,255,0.2)' : '#e2e8f0',
+                              color: selectedTests.includes(test) ? 'white' : '#64748b',
+                              borderRadius: '50%', border: 'none', cursor: 'pointer',
+                              padding: 0, margin: 0, fontSize: '14px'
+                            }} onClick={(e) => { e.stopPropagation(); toggleTestSelection(test); }}>
+                              {selectedTests.includes(test) ? '−' : '+'}
+                            </button>
+                          </div>
                         ))}
                       </div>
                     )}
@@ -586,7 +606,7 @@ function LabAdmin({ onBack, activeSubTab }) {
               </div>
               <div className="form-row-lab">
                 <div className="lab-form-group">
-                  <label><i className="fa-solid fa-phone"></i> Contact</label>
+                  <label><i className="fa-solid fa-phone"></i> Contact Number</label>
                   <input placeholder="Contact Number" value={formData.contact} onChange={(e) => setFormData({ ...formData, contact: e.target.value })} />
                 </div>
                 <div className="lab-form-group">
@@ -595,42 +615,43 @@ function LabAdmin({ onBack, activeSubTab }) {
                     <option value="">Select Gender</option>
                     <option>Male</option>
                     <option>Female</option>
+                    <option>Other</option>
                   </select>
                 </div>
               </div>
               <div className="form-row-lab">
                 <div className="lab-form-group">
-                  <label><i className="fa-solid fa-cake-candles"></i> Age</label>
+                  <label><i className="fa-solid fa-cake-candles"></i> Age (Years)</label>
                   <input type="number" placeholder="Age" value={formData.age} onChange={(e) => setFormData({ ...formData, age: e.target.value })} />
                 </div>
                 <div className="lab-form-group">
-                  <label><i className="fa-solid fa-calendar-day"></i> Date</label>
+                  <label><i className="fa-solid fa-calendar-day"></i> Investigation Date</label>
                   <input type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} required />
                 </div>
               </div>
-              
+
               <div className="lab-form-group">
                 <label><i className="fa-solid fa-clock"></i> Investigation Time</label>
                 <div className="time-select-group">
-                  <select name="hour" value={time12h.hour} onChange={handleTimeChange}>
+                  <select name="hour" value={time12h.hour} onChange={handleTimeChange} className="time-unit">
                     {Array.from({ length: 12 }, (_, i) => i + 1).map(h => (
                       <option key={h} value={h.toString().padStart(2, '0')}>{h}</option>
                     ))}
                   </select>
                   <span className="time-sep">:</span>
-                  <select name="minute" value={time12h.minute} onChange={handleTimeChange}>
-                    {["00", "15", "30", "45"].map(m => (
+                  <select name="minute" value={time12h.minute} onChange={handleTimeChange} className="time-unit">
+                    {Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0')).map(m => (
                       <option key={m} value={m}>{m}</option>
                     ))}
                   </select>
-                  <select name="period" value={time12h.period} onChange={handleTimeChange}>
+                  <select name="period" value={time12h.period} onChange={handleTimeChange} className="time-period">
                     <option value="AM">AM</option>
                     <option value="PM">PM</option>
                   </select>
                 </div>
               </div>
 
-              <div className="submit-container-lab" style={{ marginTop: '20px' }}>
+              <div className="submit-container-lab" style={{ marginTop: '20px', paddingBottom: '40px' }}>
                 <button className="primary-btn">
                   <i className="fa-solid fa-save"></i> {editingRecordId ? "Update Record" : `Save ${selectedTests.length} Record${selectedTests.length > 1 ? 's' : ''}`}
                 </button>
@@ -642,224 +663,230 @@ function LabAdmin({ onBack, activeSubTab }) {
 
       {/* SAVED RECORDS CARDS - Only for Pending/Completed or all Lab context */}
       {(activeSubTab === "lab_pending" || activeSubTab === "lab_completed" || activeSubTab === "lab") && records.length > 0 && (
-        <div className="universal-section" style={{ marginTop: '50px' }}>
-          
-          {activeSubTab === "lab_pending" && (
-            <div className="summary-header-premium">
-              <div className="metric-card-horizontal pending">
-                <div className="m-icon-large">
-                  <i className="fa-solid fa-hourglass-half"></i>
+        <div className="lab-records-wrapper">
+
+          <div className="lab-records-header">
+            {activeSubTab === "lab_pending" && (
+              <div className="horizontal-summary-banner-embedded">
+                <div className="h-summary-left">
+                  <div className="h-summary-icon" style={{ background: '#fff7ed', color: '#f59e0b' }}>
+                    <i className="fa-solid fa-hourglass-half"></i>
+                  </div>
+                  <div className="h-summary-text">
+                    <h2>Pending Lab Reports</h2>
+                    <p>In-progress investigations that are currently being processed.</p>
+                  </div>
                 </div>
-                <div className="m-info-large">
-                  <h2>Pending Lab Reports</h2>
-                  <p>In-progress investigations that are currently being processed in the laboratory.</p>
-                </div>
-                <div className="m-stat-large">
-                  <span className="count">{pendingCount}</span>
-                  <span className="label">Awaiting Result</span>
+                <div className="h-summary-right">
+                  <span className="h-summary-number">{pendingCount}</span>
+                  <span className="h-summary-label">Awaiting Result</span>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {activeSubTab === "lab_completed" && (
-            <div className="summary-header-premium">
-              <div className="metric-card-horizontal">
-                <div className="m-icon-large">
-                  <i className="fa-solid fa-check-double"></i>
+            {activeSubTab === "lab_completed" && (
+              <div className="horizontal-summary-banner-embedded">
+                <div className="h-summary-left">
+                  <div className="h-summary-icon" style={{ background: '#f0fdf4', color: '#16a34a' }}>
+                    <i className="fa-solid fa-check-double"></i>
+                  </div>
+                  <div className="h-summary-text">
+                    <h2>Completed Lab Investigations</h2>
+                    <p>All laboratory tests processed and delivered.</p>
+                  </div>
                 </div>
-                <div className="m-info-large">
-                  <h2>Completed Lab Investigations</h2>
-                  <p>All laboratory tests that have been processed and delivered to patients.</p>
-                </div>
-                <div className="m-stat-large">
-                  <span className="count">{completedCount}</span>
-                  <span className="label">Total Reports</span>
+                <div className="h-summary-right">
+                  <span className="h-summary-number">{completedCount}</span>
+                  <span className="h-summary-label">Total Reports</span>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap', gap: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-              <button className="global-back-btn" onClick={onBack} style={{ margin: 0, padding: '8px 15px' }}>
+            <div className="lab-records-actions-bar-container">
+              <button className="global-back-btn" onClick={onBack}>
                 <i className="fa-solid fa-arrow-left"></i> Back
               </button>
-            </div>
-            <div className="filters-container" style={{ display: 'flex', gap: '10px' }}>
-              <div className="search-bar-premium" style={{ border: '1px solid #e2e8f0', background: 'white' }}>
-                <i className="fa-solid fa-magnifying-glass"></i>
+
+              <div className="lab-records-filters">
                 <input
                   type="text"
-                  placeholder="Search records..."
+                  className="premium-filter-input"
+                  placeholder="Search Records..."
                   value={recordSearch}
                   onChange={(e) => setRecordSearch(e.target.value)}
                 />
+
+                <div className="date-input-wrapper-premium">
+                  <i className="fa-solid fa-calendar-days"></i>
+                  <input
+                    type="date"
+                    className="premium-date-input"
+                    value={recordDate}
+                    onChange={(e) => setRecordDate(e.target.value)}
+                  />
+                </div>
+
+                <button
+                  className="clear-filters-primary-btn"
+                  onClick={() => { setRecordSearch(""); setRecordDate(""); }}
+                >
+                  Clear Filters
+                </button>
               </div>
-              <input
-                type="date"
-                className="premium-date-input"
-                value={recordDate}
-                onChange={(e) => setRecordDate(e.target.value)}
-                style={{ padding: '8px', borderRadius: '10px', border: '1px solid #e2e8f0' }}
-              />
             </div>
           </div>
+          <div className="lab-records-body">
+            <div className="selection-status-bar">
+              <input
+                type="checkbox"
+                className="table-checkbox"
+                checked={filteredRecords.length > 0 && filteredRecords.every(r => selectedIds.includes(r.id))}
+                onChange={(e) => { e.stopPropagation(); handleSelectAll(); }}
+                onClick={(e) => e.stopPropagation()}
+              />
+              <span style={{ fontWeight: 600, color: '#64748b', fontSize: '13px' }}>Select All Records ({filteredRecords.length})</span>
+            </div>
 
-          <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <input
-              type="checkbox"
-              className="table-checkbox"
-              checked={filteredRecords.length > 0 && filteredRecords.every(r => selectedIds.includes(r.id))}
-              onChange={(e) => { e.stopPropagation(); handleSelectAll(); }}
-              onClick={(e) => e.stopPropagation()}
-            />
-            <span style={{ fontWeight: 600, color: '#64748b', fontSize: '14px' }}>Select All Records</span>
-          </div>
-
-          {activeSubTab !== "lab_completed" ? (
-            <div className="universal-grid">
+            <div className={activeSubTab === "lab_completed" ? "appointment-cards-list" : "universal-grid"}>
               {filteredRecords.length === 0 ? (
                 <div className="no-results" style={{ gridColumn: '1/-1', background: 'white', padding: '40px', borderRadius: '16px', textAlign: 'center' }}>
                   <i className="fa-solid fa-folder-open" style={{ fontSize: '30px', color: '#cbd5e1', marginBottom: '10px', display: 'block' }}></i>
                   <p>No records match filters</p>
                 </div>
               ) : (
-                filteredRecords.map(record => (
-                  <div key={record.id} className={`universal-card ${selectedIds.includes(record.id) ? 'selected' : ''}`}>
-                    <div className="u-card-checkbox">
-                      <input
-                        type="checkbox"
-                        className="table-checkbox"
-                        checked={selectedIds.includes(record.id)}
-                        onChange={(e) => { e.stopPropagation(); toggleSelect(record.id); }}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </div>
-                    <div className="u-card-header">
-                      <div className="u-card-avatar" style={{ background: '#e0e7ff', color: '#4f46e5' }}>{getInitials(record.name)}</div>
-                      <div className="u-card-title-group">
-                        <h3>{record.name}</h3>
-                        <span className="u-card-badge">{record.age}Y • {record.gender}</span>
+                filteredRecords.map(record =>
+                  activeSubTab === "lab_completed" ? (
+                    <div key={record.id} className={`appointment-card-horizontal ${selectedIds.includes(record.id) ? "row-selected" : ""}`}>
+                      <div className="app-card-checkbox">
+                        <input
+                          type="checkbox"
+                          className="table-checkbox"
+                          checked={selectedIds.includes(record.id)}
+                          onChange={(e) => { e.stopPropagation(); toggleSelect(record.id); }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
                       </div>
-                      <div className={`u-card-status-dot ${record.reportStatus === 'COMPLETE' ? 'active' : ''}`}></div>
-                    </div>
 
-                    <div className="u-card-info-box">
-                      <div className="u-info-item">
-                        <i className="fa-solid fa-vial"></i>
-                        <span style={{ fontWeight: 700, color: '#1e293b' }}>{record.test}</span>
+                      <div className="app-card-main">
+                        <div className="app-card-avatar" style={{ background: '#dcfce7', color: '#16a34a' }}>
+                          {getInitials(record.name)}
+                        </div>
+                        <div className="app-card-info">
+                          <h3>{record.name}</h3>
+                          <span className="app-card-id">ID: #{record.id.toString().substring(record.id.toString().length - 4)}</span>
+                        </div>
                       </div>
-                      <div className="u-info-item">
-                        <i className="fa-solid fa-phone"></i>
-                        <span>{record.contact || "No Contact"}</span>
-                      </div>
-                      <div className="u-info-item">
-                        <i className="fa-solid fa-location-dot"></i>
-                        <span>{record.address || "No Address"}</span>
-                      </div>
-                    </div>
 
-                    <div className="u-card-footer">
-                      <div className="u-footer-col">
-                        <span className="u-footer-label">Test Date</span>
-                        <span className="u-footer-value">{formatDate(record.date)}</span>
+                      <div className="app-card-details">
+                        <div className="app-detail-group" style={{ flex: 1.5 }}>
+                          <span className="app-detail-label"><i className="fa-solid fa-vial"></i> Investigation</span>
+                          <span className="app-detail-value" style={{ color: '#4356c4', fontWeight: 800 }}>{record.test}</span>
+                        </div>
+                        <div className="app-detail-group">
+                          <span className="app-detail-label">Patient Info</span>
+                          <span className="app-detail-value">{record.age}Y • {record.gender}</span>
+                        </div>
+                        <div className="app-detail-group">
+                          <span className="app-detail-label">Collection Date</span>
+                          <span className="app-detail-value">{formatDate(record.date)}</span>
+                        </div>
                       </div>
-                      <div className="u-footer-col">
-                        <span className="u-footer-label">Status</span>
-                        <span className={`u-footer-value ${record.reportStatus === 'COMPLETE' ? 'success' : ''}`}>
-                          {record.reportStatus || "PENDING"}
+
+                      <div className="app-card-status">
+                        <span className="status completed">
+                          {record.reportStatus || "COMPLETED"}
                         </span>
                       </div>
-                      <div className="u-card-actions">
-                        {record.reportStatus !== "COMPLETE" && (
-                          <button
-                            className="u-action-btn discharge"
-                            style={{ background: '#dcfce7', color: '#16a34a' }}
-                            onClick={(e) => { e.stopPropagation(); handleDeliver(record); }}
-                            title="Deliver Report"
-                          >
-                            <i className="fa-solid fa-truck-fast"></i> Deliver
-                          </button>
-                        )}
-                        {record.reportStatus !== "COMPLETE" && (
-                          <button className="u-action-btn edit" onClick={(e) => { e.stopPropagation(); handleEdit(record); }} title="Edit">
-                            <i className="fa-solid fa-pen"></i>
-                          </button>
-                        )}
+
+                      <div className="app-card-actions">
                         <button className="u-action-btn delete" onClick={(e) => { e.stopPropagation(); handleDelete(record.id); }} title="Delete">
                           <i className="fa-solid fa-trash"></i>
                         </button>
                       </div>
                     </div>
-                  </div>
-                ))
-              )}
-            </div>
-          ) : (
-            <div className="appointment-cards-list">
-              {filteredRecords.length === 0 ? (
-                <div className="no-results" style={{ background: 'white', padding: '60px', borderRadius: '20px', textAlign: 'center', border: '2px dashed #e2e8f0' }}>
-                  <i className="fa-solid fa-folder-open" style={{ fontSize: '40px', color: '#cbd5e1', marginBottom: '15px', display: 'block' }}></i>
-                  <p style={{ color: '#64748b', fontSize: '16px' }}>No completed lab records found.</p>
-                </div>
-              ) : (
-                filteredRecords.map(record => (
-                  <div key={record.id} className={`appointment-card-horizontal ${selectedIds.includes(record.id) ? "row-selected" : ""}`} style={{ padding: '24px 28px' }}>
-                    <div className="app-card-checkbox">
-                      <input
-                        type="checkbox"
-                        className="table-checkbox"
-                        checked={selectedIds.includes(record.id)}
-                        onChange={(e) => { e.stopPropagation(); toggleSelect(record.id); }}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </div>
-                    <div className="app-card-main" style={{ flex: '1.2' }}>
-                      <div className="app-card-avatar" style={{ 
-                          background: '#dcfce7', 
-                          color: '#16a34a', 
-                          boxShadow: '0 4px 10px rgba(22, 163, 74, 0.15)',
-                          width: '56px', height: '56px', fontSize: '18px'
-                      }}>
+                  ) : (
+                    <div key={record.id} className={`universal-card lab-pending-card ${selectedIds.includes(record.id) ? 'selected' : ''}`}>
+                      <div className="u-card-checkbox">
+                        <input
+                          type="checkbox"
+                          className="table-checkbox"
+                          checked={selectedIds.includes(record.id)}
+                          onChange={(e) => { e.stopPropagation(); toggleSelect(record.id); }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                      <div className="u-card-header">
+                        <div className="u-card-avatar" style={{
+                          background: record.reportStatus === 'COMPLETE' ? '#dcfce7' : '#e0e7ff',
+                          color: record.reportStatus === 'COMPLETE' ? '#16a34a' : '#4f46e5'
+                        }}>
                           {getInitials(record.name)}
+                        </div>
+                        <div className="u-card-title-group">
+                          <h3>{record.name}</h3>
+                          <span className="u-card-badge">{record.age}Y • {record.gender}</span>
+                        </div>
+                        <div className={`u-card-status-dot ${record.reportStatus === 'COMPLETE' ? 'active' : ''}`}></div>
                       </div>
-                      <div className="app-card-info">
-                        <h3 style={{ fontSize: '18px', color: '#1e293b', marginBottom: '4px' }}>{record.name}</h3>
-                        <span className="app-card-id" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><i className="fa-solid fa-hashtag" style={{ color: '#94a3b8', fontSize: '11px' }}></i> {record.id}</span>
+
+                      <div className="u-card-info-box">
+                        <div className="u-info-item">
+                          <i className="fa-solid fa-vial" style={{ color: '#6366f1' }}></i>
+                          <span style={{ fontWeight: 700, color: '#1e293b' }}>{record.test}</span>
+                        </div>
+                        <div className="u-info-item">
+                          <i className="fa-solid fa-phone"></i>
+                          <span>{record.contact || "No Contact"}</span>
+                        </div>
+                        <div className="u-info-item">
+                          <i className="fa-solid fa-location-dot"></i>
+                          <span>{record.address || "No Address"}</span>
+                        </div>
+                      </div>
+
+                      <div className="u-card-footer">
+                        <div className="u-footer-metrics">
+                          <div className="u-footer-col">
+                            <span className="u-footer-label">Test Date</span>
+                            <span className="u-footer-value">{formatDate(record.date)}</span>
+                          </div>
+                          <div className="u-footer-col">
+                            <span className="u-footer-label">Status</span>
+                            <span className={`u-footer-value ${record.reportStatus === 'COMPLETE' ? 'success' : ''}`}>
+                              {record.reportStatus || "PENDING"}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="u-card-actions">
+                          {record.reportStatus !== "COMPLETE" ? (
+                            <button
+                              className="u-action-btn discharge"
+                              style={{ background: '#dcfce7', color: '#16a34a' }}
+                              onClick={(e) => { e.stopPropagation(); handleDeliver(record); }}
+                              title="Deliver Report"
+                            >
+                              <i className="fa-solid fa-truck-fast"></i> Deliver
+                            </button>
+                          ) : null}
+                          <div className="u-actions-group">
+                            {record.reportStatus !== "COMPLETE" && (
+                              <button className="u-action-btn edit" onClick={(e) => { e.stopPropagation(); handleEdit(record); }} title="Edit">
+                                <i className="fa-solid fa-pen"></i>
+                              </button>
+                            )}
+                            <button className="u-action-btn delete" onClick={(e) => { e.stopPropagation(); handleDelete(record.id); }} title="Delete">
+                              <i className="fa-solid fa-trash"></i>
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="app-card-details" style={{ flex: 2.2, display: 'flex', gap: '25px', backgroundColor: '#f8fafc', padding: '16px 24px', borderRadius: '14px', border: '1px solid #f1f5f9' }}>
-                      <div className="app-detail-group" style={{ flex: 1 }}>
-                        <span className="app-detail-label" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}><i className="fa-solid fa-vial" style={{ color: '#6366f1', fontSize: '14px' }}></i> Test(s) Conducted</span>
-                        <span className="app-detail-value">
-                          <div style={{ fontWeight: 600, color: '#334155', fontSize: '15px' }}>{record.test}</div>
-                          <div style={{ color: '#64748b', fontSize: '13px', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}><i className="fa-solid fa-user" style={{ color: '#94a3b8' }}></i> {record.age}Y • {record.gender}</div>
-                        </span>
-                      </div>
-                      <div className="app-detail-group" style={{ flex: 1, borderLeft: '1.5px solid #e2e8f0', paddingLeft: '25px' }}>
-                        <span className="app-detail-label" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}><i className="fa-solid fa-truck-fast" style={{ color: '#f59e0b', fontSize: '14px' }}></i> Delivery Date</span>
-                        <span className="app-detail-value">
-                          <div style={{ fontWeight: 600, color: '#334155', fontSize: '15px' }}>{formatDate(record.date)}</div>
-                          <div style={{ color: '#64748b', fontSize: '13px', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}><i className="fa-solid fa-phone" style={{ color: '#94a3b8', fontSize: '12px' }}></i> {record.contact || "No Contact"}</div>
-                        </span>
-                      </div>
-                    </div>
-                    <div className="app-card-status" style={{ minWidth: '140px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                      <div style={{ textAlign: 'center' }}>
-                          <span className="status completed" style={{ padding: '6px 14px', borderRadius: '8px', fontWeight: 700, fontSize: '13px', boxShadow: '0 2px 4px rgba(3, 105, 161, 0.1)' }}>Complete</span>
-                      </div>
-                    </div>
-                    <div className="app-card-actions" style={{ marginLeft: '10px' }}>
-                      <button className="u-action-btn delete" onClick={(e) => { e.stopPropagation(); handleDelete(record.id); }} title="Delete Record">
-                          <i className="fa-solid fa-trash"></i>
-                      </button>
-                    </div>
-                  </div>
-                ))
+                  )
+                )
               )}
             </div>
-          )}
+          </div>
         </div>
       )}
     </div>

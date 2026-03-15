@@ -448,7 +448,7 @@ function IpdAdmin({ onBack, activeSubTab }) {
                                 </div>
                             </div>
 
-                            <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end', gap: '15px' }}>
+                            <div style={{ marginTop: '5px', display: 'flex', justifyContent: 'flex-end', gap: '15px' }}>
                                 <button type="button" className="global-back-btn" onClick={onBack} style={{ margin: 0, padding: '14px 30px' }}>Discard</button>
                                 <button type="submit" className="primary-btn" style={{ padding: '14px 45px', fontSize: '16px', borderRadius: '14px' }}>
                                     <i className="fa-solid fa-file-signature"></i> Finalize Admission
@@ -481,30 +481,32 @@ function IpdAdmin({ onBack, activeSubTab }) {
                         </div>
                     )}
 
-                    <div className="ipd-section-header">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                            <button className="global-back-btn" onClick={onBack} style={{ margin: 0, padding: '8px 15px' }}>
-                                <i className="fa-solid fa-arrow-left"></i> Back
-                            </button>
-                        </div>
-                        <div className="filters-container" style={{ display: 'flex', gap: '10px' }}>
-                            <div className="search-bar-premium" style={{ border: '1px solid #e2e8f0', background: 'white' }}>
-                                <i className="fa-solid fa-magnifying-glass"></i>
-                                <input
-                                    type="text"
-                                    placeholder="Search admits..."
-                                    value={admittedSearch}
-                                    onChange={(e) => setAdmittedSearch(e.target.value)}
-                                />
-                            </div>
+                    <div className="filters-container" style={{ display: 'flex', gap: '15px', marginBottom: '25px', flexWrap: 'wrap', alignItems: 'center' }}>
+                        <button className="global-back-btn" onClick={onBack} style={{ padding: '8px 15px', margin: 0 }}>
+                            ← Back
+                        </button>
+                        <div className="search-bar-premium" style={{ border: '1px solid #e2e8f0', background: 'white', flex: 1 }}>
+                            <i className="fa-solid fa-magnifying-glass"></i>
                             <input
-                                type="date"
-                                className="premium-date-input"
-                                value={admittedDateFilter}
-                                onChange={(e) => setAdmittedDateFilter(e.target.value)}
-                                style={{ padding: '8px', borderRadius: '10px', border: '1px solid #e2e8f0' }}
+                                type="text"
+                                placeholder="Search Patients..."
+                                value={admittedSearch}
+                                onChange={(e) => setAdmittedSearch(e.target.value)}
                             />
                         </div>
+                        <input
+                            type="date"
+                            className="premium-date-input"
+                            value={admittedDateFilter}
+                            onChange={(e) => setAdmittedDateFilter(e.target.value)}
+                            style={{ padding: '8px', borderRadius: '10px', border: '1px solid #e2e8f0' }}
+                        />
+                        <button
+                            onClick={() => { setAdmittedSearch(""); setAdmittedDateFilter(""); }}
+                            style={{ padding: '8px 15px', borderRadius: '8px', border: 'none', background: '#e2e8f0', cursor: 'pointer', fontWeight: 'bold', color: '#64748b' }}
+                        >
+                            Clear Filters
+                        </button>
                     </div>
 
                     <div style={{ marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -526,7 +528,7 @@ function IpdAdmin({ onBack, activeSubTab }) {
                             </div>
                         ) : (
                             admittedPatients.map(r => (
-                                <div key={r.id} className={`universal-card ${selectedIds.includes(r.id) ? 'selected' : ''}`}>
+                                <div key={r.id} className={`universal-card admitted-patient-card ${selectedIds.includes(r.id) ? 'selected' : ''}`}>
                                     <div className="u-card-checkbox">
                                         <input
                                             type="checkbox"
@@ -561,24 +563,28 @@ function IpdAdmin({ onBack, activeSubTab }) {
                                     </div>
 
                                     <div className="u-card-footer">
-                                        <div className="u-footer-col">
-                                            <span className="u-footer-label">Adm. Date</span>
-                                            <span className="u-footer-value">{formatDate(r.admissionDate)}</span>
-                                        </div>
-                                        <div className="u-footer-col">
-                                            <span className="u-footer-label">Duration</span>
-                                            <span className="u-footer-value success">{getDuration(r.admissionDate)}</span>
+                                        <div className="admitted-footer-metrics">
+                                            <div className="u-footer-col">
+                                                <span className="u-footer-label">Adm. Date</span>
+                                                <span className="u-footer-value">{formatDate(r.admissionDate)}</span>
+                                            </div>
+                                            <div className="u-footer-col">
+                                                <span className="u-footer-label">Duration</span>
+                                                <span className="u-footer-value success">{getDuration(r.admissionDate)}</span>
+                                            </div>
                                         </div>
                                         <div className="u-card-actions">
                                             <button className="u-action-btn discharge" onClick={(e) => { e.stopPropagation(); openDischargeModal(r); }}>
                                                 <i className="fa-solid fa-arrow-right-from-bracket"></i> Discharge
                                             </button>
-                                            <button className="u-action-btn edit" onClick={(e) => { e.stopPropagation(); handleEdit(r); }} title="Edit">
-                                                <i className="fa-solid fa-pen"></i>
-                                            </button>
-                                            <button className="u-action-btn delete" onClick={(e) => { e.stopPropagation(); deleteRecord(r.id); }} title="Delete">
-                                                <i className="fa-solid fa-trash"></i>
-                                            </button>
+                                            <div className="u-actions-group">
+                                                <button className="u-action-btn edit" onClick={(e) => { e.stopPropagation(); handleEdit(r); }} title="Edit">
+                                                    <i className="fa-solid fa-pen"></i>
+                                                </button>
+                                                <button className="u-action-btn delete" onClick={(e) => { e.stopPropagation(); deleteRecord(r.id); }} title="Delete">
+                                                    <i className="fa-solid fa-trash"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -594,60 +600,69 @@ function IpdAdmin({ onBack, activeSubTab }) {
             {activeSubTab === "ipd_records" && (
                 <div className="ipd-section">
 
-                    <div className="summary-header-premium" style={{ marginBottom: '25px' }}>
-                        <div className="metric-card-horizontal">
-                            <div className="m-icon-large">
+                    <div className="horizontal-summary-banner">
+                        <div className="h-summary-left">
+                            <div className="h-summary-icon" style={{ background: '#f0f9ff', color: '#0369a1' }}>
                                 <i className="fa-solid fa-folder-open"></i>
                             </div>
-                            <div className="m-info-large">
+                            <div className="h-summary-text">
                                 <h2>All IPD Records</h2>
                                 <p>Comprehensive list of all patient admissions and discharges.</p>
                             </div>
-                            <div className="m-stat-large">
-                                <span className="count">{ipdRecords.length}</span>
-                                <span className="label">Total Records</span>
-                            </div>
+                        </div>
+                        <div className="h-summary-right">
+                            <span className="h-summary-number">{ipdRecords.length}</span>
+                            <span className="h-summary-label">Total Records</span>
                         </div>
                     </div>
 
-                    <div className="ipd-section-header">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                            <button className="global-back-btn" onClick={onBack} style={{ margin: 0, padding: '8px 15px' }}>
-                                <i className="fa-solid fa-arrow-left"></i> Back
-                            </button>
-                        </div>
-                        <div className="filters-container" style={{ display: 'flex', gap: '10px' }}>
-                            <div className="search-bar-premium" style={{ border: '1px solid #e2e8f0', background: 'white' }}>
-                                <i className="fa-solid fa-magnifying-glass"></i>
-                                <input
-                                    type="text"
-                                    placeholder="Search records..."
-                                    value={allSearch}
-                                    onChange={(e) => setAllSearch(e.target.value)}
-                                />
-                            </div>
+                    <div className="filters-container" style={{ display: 'flex', gap: '15px', marginBottom: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                        <button className="global-back-btn" onClick={onBack} style={{ padding: '8px 15px', margin: 0 }}>
+                            ← Back
+                        </button>
+                        <div className="search-bar-premium" style={{ border: '1px solid #e2e8f0', background: 'white', flex: 1 }}>
+                            <i className="fa-solid fa-magnifying-glass"></i>
                             <input
-                                type="date"
-                                className="premium-date-input"
-                                value={allDateFilter}
-                                onChange={(e) => setAllDateFilter(e.target.value)}
-                                style={{ padding: '8px', borderRadius: '10px', border: '1px solid #e2e8f0' }}
+                                type="text"
+                                placeholder="Search Patients..."
+                                value={allSearch}
+                                onChange={(e) => setAllSearch(e.target.value)}
                             />
                         </div>
-                    </div>
-
-                    <div style={{ marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <input
-                            type="checkbox"
-                            className="table-checkbox"
-                            checked={allPatients.length > 0 && allPatients.every(r => selectedIds.includes(r.id))}
-                            onChange={(e) => { e.stopPropagation(); handleSelectAll(allPatients); }}
-                            onClick={(e) => e.stopPropagation()}
+                            type="date"
+                            className="premium-date-input"
+                            value={allDateFilter}
+                            onChange={(e) => setAllDateFilter(e.target.value)}
+                            style={{ padding: '8px', borderRadius: '10px', border: '1px solid #e2e8f0' }}
                         />
-                        <span style={{ fontWeight: 600, color: '#64748b', fontSize: '14px' }}>Select All Records</span>
+                        <button
+                            onClick={() => { setAllSearch(""); setAllDateFilter(""); }}
+                            style={{ padding: '8px 15px', borderRadius: '8px', border: 'none', background: '#e2e8f0', cursor: 'pointer', fontWeight: 'bold', color: '#64748b' }}
+                        >
+                            Clear Filters
+                        </button>
                     </div>
+                    {selectedIds.length > 0 && (
+                        <div style={{ marginBottom: '15px' }}>
+                            <button className="delete-btn" onClick={handleBulkDelete} style={{ background: '#dc3545', color: 'white', padding: '8px 15px', margin: 0 }}>
+                                <i className="fa-solid fa-trash"></i> Delete Selected ({selectedIds.length})
+                            </button>
+                        </div>
+                    )}
 
                     <div className="appointment-cards-list">
+                        <div style={{ marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px', background: '#f8fafc', padding: '10px 15px', borderRadius: '10px', border: '1px solid #f1f5f9' }}>
+                            <input
+                                type="checkbox"
+                                className="table-checkbox"
+                                checked={allPatients.length > 0 && allPatients.every(item => selectedIds.includes(item.id))}
+                                onChange={(e) => { e.stopPropagation(); handleSelectAll(allPatients); }}
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                            <span style={{ fontWeight: 600, color: '#64748b', fontSize: '13px' }}>Select All IPD Records</span>
+                        </div>
+
                         {allPatients.length === 0 ? (
                             <div className="no-results" style={{ background: 'white', padding: '60px', borderRadius: '20px', textAlign: 'center', border: '2px dashed #e2e8f0' }}>
                                 <i className="fa-solid fa-folder-open" style={{ fontSize: '40px', color: '#cbd5e1', marginBottom: '15px', display: 'block' }}></i>
@@ -655,7 +670,7 @@ function IpdAdmin({ onBack, activeSubTab }) {
                             </div>
                         ) : (
                             allPatients.map(r => (
-                                <div key={r.id} className={`appointment-card-horizontal ${selectedIds.includes(r.id) ? "row-selected" : ""}`} style={{ padding: '24px 28px' }}>
+                                <div key={r.id} className={`appointment-card-horizontal ${selectedIds.includes(r.id) ? "row-selected" : ""}`}>
                                     <div className="app-card-checkbox">
                                         <input
                                             type="checkbox"
@@ -665,51 +680,61 @@ function IpdAdmin({ onBack, activeSubTab }) {
                                             onClick={(e) => e.stopPropagation()}
                                         />
                                     </div>
-                                    <div className="app-card-main" style={{ flex: '1.2' }}>
-                                        <div className="app-card-avatar" style={{
-                                            background: r.status === 'ADMITTED' ? '#e0e7ff' : '#dcfce7',
-                                            color: r.status === 'ADMITTED' ? '#4f46e5' : '#16a34a',
-                                            boxShadow: r.status === 'ADMITTED' ? '0 4px 10px rgba(79, 70, 229, 0.15)' : '0 4px 10px rgba(22, 163, 74, 0.15)',
-                                            width: '56px', height: '56px', fontSize: '18px'
-                                        }}>
-                                            {getInitials(r.patientName)}
-                                        </div>
+
+                                    <div className="app-card-main">
+                                        <div className="app-card-avatar">{getInitials(r.patientName)}</div>
                                         <div className="app-card-info">
-                                            <h3 style={{ fontSize: '18px', color: '#1e293b', marginBottom: '4px' }}>{r.patientName}</h3>
-                                            <span className="app-card-id" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><i className="fa-solid fa-hashtag" style={{ color: '#94a3b8', fontSize: '11px' }}></i> {r.id}</span>
+                                            <h3>{r.patientName}</h3>
+                                            <span className="app-card-id">RECORD ID: #{r.id}</span>
                                         </div>
                                     </div>
-                                    <div className="app-card-details" style={{ flex: 2.2, display: 'flex', gap: '25px', backgroundColor: '#f8fafc', padding: '16px 24px', borderRadius: '14px', border: '1px solid #f1f5f9' }}>
-                                        <div className="app-detail-group" style={{ flex: 1 }}>
-                                            <span className="app-detail-label" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}><i className="fa-solid fa-bed" style={{ color: '#6366f1', fontSize: '14px' }}></i> Admission & Ward</span>
-                                            <span className="app-detail-value">
-                                                <div style={{ fontWeight: 600, color: '#334155', fontSize: '15px' }}>{formatDate(r.admissionDate)}</div>
-                                                <div style={{ color: '#64748b', fontSize: '13px', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}><i className="fa-solid fa-door-open" style={{ color: '#94a3b8' }}></i> Ward/Bed: {r.wardBedNo}</div>
+
+                                    <div className="app-card-details-grid">
+                                        <div className="app-detail-group">
+                                            <span className="app-detail-label">Admission Info</span>
+                                            <div className="app-detail-value info-stack">
+                                                <span>{formatDate(r.admissionDate)}</span>
+                                                <small className="ward-badge">
+                                                    <i className="fa-solid fa-bed"></i> {r.wardBedNo}
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div className="app-detail-group">
+                                            <span className="app-detail-label">Status & Stay</span>
+                                            <div className="app-detail-value info-stack">
+                                                {r.status === 'ADMITTED' ? (
+                                                    <>
+                                                        <span className="status-ongoing">Ongoing</span>
+                                                        <small className="stay-duration">Stay: {getDuration(r.admissionDate)}</small>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <span className="status-discharged">Discharged</span>
+                                                        <small className="stay-duration">{formatDate(r.dischargeDate)}</small>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="app-detail-group">
+                                            <span className="app-detail-label">Disease / Problem</span>
+                                            <span className="app-detail-value diagnosis-text">{r.disease}</span>
+                                        </div>
+                                        <div className="app-detail-group">
+                                            <span className="app-detail-label">Final Bill</span>
+                                            <span className={`app-detail-value bill-amount ${r.status === 'DISCHARGED' ? 'paid' : 'pending'}`}>
+                                                {r.status === 'DISCHARGED' ? `₹${r.totalBill}` : 'Pending'}
                                             </span>
                                         </div>
-                                        <div className="app-detail-group" style={{ flex: 1, borderLeft: '1.5px solid #e2e8f0', paddingLeft: '25px' }}>
-                                            <span className="app-detail-label" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}><i className="fa-solid fa-notes-medical" style={{ color: '#f59e0b', fontSize: '14px' }}></i> Disease / Problem</span>
-                                            <span className="app-detail-value">
-                                                <div style={{ fontWeight: 600, color: '#334155', fontSize: '15px' }}>{r.disease}</div>
-                                                <div style={{ color: '#64748b', fontSize: '13px', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}><i className="fa-solid fa-phone" style={{ color: '#94a3b8', fontSize: '12px' }}></i> {r.contact || "No Contact"}</div>
-                                            </span>
-                                        </div>
                                     </div>
-                                    <div className="app-card-status" style={{ minWidth: '140px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                                        {r.status === 'DISCHARGED' ? (
-                                            <div style={{ textAlign: 'center' }}>
-                                                <span className="status completed" style={{ padding: '6px 14px', borderRadius: '8px', fontWeight: 700, fontSize: '13px', boxShadow: '0 2px 4px rgba(3, 105, 161, 0.1)' }}>Discharged</span>
-                                                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '8px', fontWeight: 500 }}><i className="fa-regular fa-calendar-check" style={{ marginRight: '4px' }}></i> {formatDate(r.dischargeDate)}</div>
-                                            </div>
-                                        ) : (
-                                            <div style={{ textAlign: 'center' }}>
-                                                <span className="status pending" style={{ padding: '6px 14px', borderRadius: '8px', fontWeight: 700, fontSize: '13px', boxShadow: '0 2px 4px rgba(133, 100, 4, 0.1)', background: '#fffbeb', color: '#b45309' }}>Admitted</span>
-                                                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '8px', fontWeight: 500 }}><i className="fa-regular fa-clock" style={{ marginRight: '4px' }}></i> {getDuration(r.admissionDate)}</div>
-                                            </div>
-                                        )}
+
+                                    <div className="app-card-status">
+                                        <span className={`status ${r.status === 'ADMITTED' ? 'pending' : 'completed'}`}>
+                                            {r.status === 'ADMITTED' ? 'ADMITTED' : 'DISCHARGED'}
+                                        </span>
                                     </div>
-                                    <div className="app-card-actions" style={{ marginLeft: '10px' }}>
-                                        <button className="u-action-btn delete" onClick={() => deleteRecord(r.id)} title="Delete Record">
+
+                                    <div className="app-card-actions">
+                                        <button className="u-action-btn delete" onClick={(e) => { e.stopPropagation(); deleteRecord(r.id); }} title="Delete">
                                             <i className="fa-solid fa-trash"></i>
                                         </button>
                                     </div>
