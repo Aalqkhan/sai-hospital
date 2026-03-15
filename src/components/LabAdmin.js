@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import API_BASE_URL from "../apiConfig";
 
 function LabAdmin({ onBack, activeSubTab }) {
 
@@ -105,7 +106,7 @@ function LabAdmin({ onBack, activeSubTab }) {
   const fetchRecords = async () => {
     try {
       const token = localStorage.getItem("jwtToken");
-      const response = await fetch("http://localhost:8080/api/lab-records", {
+      const response = await fetch(`${API_BASE_URL}/api/lab-records`, {
         headers: {
           "Authorization": `Bearer ${token}`
         }
@@ -165,7 +166,7 @@ function LabAdmin({ onBack, activeSubTab }) {
           date: combinedDateTime,
           reportStatus: records.find(r => r.id === editingRecordId)?.reportStatus || "PENDING"
         };
-        response = await fetch(`http://localhost:8080/api/lab-records/${editingRecordId}`, {
+        response = await fetch(`${API_BASE_URL}/api/lab-records/${editingRecordId}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -185,7 +186,7 @@ function LabAdmin({ onBack, activeSubTab }) {
           date: combinedDateTime,
           reportStatus: "PENDING"
         };
-        response = await fetch("http://localhost:8080/api/lab-records", {
+        response = await fetch(`${API_BASE_URL}/api/lab-records`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -316,7 +317,7 @@ function LabAdmin({ onBack, activeSubTab }) {
     try {
       const token = localStorage.getItem("jwtToken");
       const updatedRecord = { ...record, reportStatus: "COMPLETE" };
-      const res = await fetch(`http://localhost:8080/api/lab-records/${record.id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/lab-records/${record.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -338,7 +339,7 @@ function LabAdmin({ onBack, activeSubTab }) {
     if (window.confirm("Delete this lab record?")) {
       try {
         const token = localStorage.getItem("jwtToken");
-        const res = await fetch(`http://localhost:8080/api/lab-records/${id}`, {
+        const res = await fetch(`${API_BASE_URL}/api/lab-records/${id}`, {
           method: "DELETE",
           headers: {
             "Authorization": `Bearer ${token}`
@@ -361,7 +362,7 @@ function LabAdmin({ onBack, activeSubTab }) {
       try {
         const token = localStorage.getItem("jwtToken");
         const deletePromises = selectedIds.map(id =>
-          fetch(`http://localhost:8080/api/lab-records/${id}`, {
+          fetch(`${API_BASE_URL}/api/lab-records/${id}`, {
             method: "DELETE",
             headers: { "Authorization": `Bearer ${token}` }
           })
@@ -462,40 +463,29 @@ function LabAdmin({ onBack, activeSubTab }) {
         {/* GRID TEST LIST - Only for Test Requests */}
         {(activeSubTab === "lab" || activeSubTab === "lab_requests") && (
           <div style={{ width: '100%', animation: 'fadeIn 0.4s ease-out' }}>
-            <div className="filters-container" style={{ display: 'flex', gap: '15px', marginBottom: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div className="lab-records-actions-bar-container" style={{ marginBottom: '15px' }}>
               <button className="global-back-btn" onClick={onBack} style={{ margin: 0, padding: '8px 15px' }}>
                 <i className="fa-solid fa-arrow-left"></i> Back
               </button>
-              <div className="search-bar-premium" style={{ border: '1px solid #e2e8f0', background: 'white', flex: 1 }}>
-                <i className="fa-solid fa-magnifying-glass"></i>
+              <div className="lab-records-filters">
                 <input
                   type="text"
+                  className="premium-filter-input"
                   placeholder="Search investigations..."
                   value={investigationSearch}
                   onChange={(e) => setInvestigationSearch(e.target.value)}
                 />
+                <button
+                  className="clear-filters-primary-btn"
+                  onClick={() => setInvestigationSearch("")}
+                >
+                  Clear Filters
+                </button>
               </div>
-              <button
-                className="clear-filters-btn"
-                onClick={() => setInvestigationSearch("")}
-                style={{
-                  padding: '8px 15px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: '#e2e8f0',
-                  color: '#64748b',
-                  fontWeight: '700',
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  height: '42px'
-                }}
-              >
-                Clear Filters
-              </button>
-              <div style={{ fontWeight: 700, color: '#475569', fontSize: '13px', background: '#f1f5f9', padding: '8px 15px', borderRadius: '10px' }}>
-                <i className="fa-solid fa-microscope" style={{ marginRight: '8px', color: '#6366f1' }}></i>
-                Select Investigation
-              </div>
+            </div>
+            <div style={{ fontWeight: 700, color: '#475569', fontSize: '13px', background: '#f1f5f9', padding: '8px 15px', borderRadius: '10px', marginTop: '10px' }}>
+              <i className="fa-solid fa-microscope" style={{ marginRight: '8px', color: '#6366f1' }}></i>
+              Select Investigation
             </div>
 
             <div className="lab-test-list-grid">
@@ -505,58 +495,38 @@ function LabAdmin({ onBack, activeSubTab }) {
                 const someSelected = tp.tests.some(t => selectedTests.includes(t));
 
                 return (
-                  <div key={pIndex} className="lab-profile-group-horizontal" style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                  <div key={pIndex} className={`lab-profile-group-horizontal ${isExpanded ? 'active' : ''}`}>
                     <div
                       className={`lab-profile-header ${someSelected ? 'has-selection' : ''}`}
                       onClick={() => toggleProfile(tp.profile)}
-                      style={{
-                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                        padding: '12px 16px', background: someSelected ? '#eff6ff' : 'white', cursor: 'pointer',
-                        borderBottom: isExpanded ? '1px solid #e2e8f0' : 'none'
-                      }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <button className="add-btn" style={{
-                          width: '24px', height: '24px', borderRadius: '4px', border: '1px solid #cbd5e1',
-                          background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer', padding: 0
-                        }} onClick={(e) => { e.stopPropagation(); toggleProfile(tp.profile); }}>
-                          <i className={`fa-solid fa-${isExpanded ? 'minus' : 'plus'}`} style={{ fontSize: '12px' }}></i>
+                      <div className="profile-title-container">
+                        <button className="add-btn profile-expand-btn">
+                          <i className={`fa-solid fa-${isExpanded ? 'minus' : 'plus'}`}></i>
                         </button>
-                        <span style={{ fontWeight: 600, color: '#1e293b', fontSize: '15px' }}>
+                        <span className="profile-name">
                           {tp.profile}
-                          {someSelected && <span style={{ marginLeft: '10px', fontSize: '11px', background: 'var(--primary)', color: 'white', padding: '2px 6px', borderRadius: '12px' }}>
-                            {tp.tests.filter(t => selectedTests.includes(t)).length}/{tp.tests.length}
-                          </span>}
+                          {someSelected && (
+                            <span className="profile-selection-count">
+                              {tp.tests.filter(t => selectedTests.includes(t)).length}/{tp.tests.length}
+                            </span>
+                          )}
                         </span>
                       </div>
                     </div>
 
                     {isExpanded && (
-                      <div className="lab-profile-tests" style={{ padding: '12px 16px', display: 'flex', flexWrap: 'wrap', gap: '8px', background: '#f8fafc' }}>
+                      <div className="lab-profile-tests-container">
                         {tp.tests.map((test, tIndex) => (
                           <div
                             key={tIndex}
-                            className={`lab-test-item sub-test ${selectedTests.includes(test) ? 'selected' : ''}`}
+                            className={`lab-test-item ${selectedTests.includes(test) ? 'selected' : ''}`}
                             onClick={(e) => { e.stopPropagation(); toggleTestSelection(test); }}
-                            style={{
-                              cursor: 'pointer', border: '1px solid #cbd5e1', padding: '6px 12px',
-                              borderRadius: '20px', display: 'inline-flex', alignItems: 'center', gap: '8px',
-                              background: selectedTests.includes(test) ? 'var(--primary)' : 'white',
-                              color: selectedTests.includes(test) ? 'white' : '#475569',
-                              fontSize: '13px', margin: 0,
-                              minHeight: '30px'
-                            }}
                           >
-                            <span style={{ fontSize: '13px', color: selectedTests.includes(test) ? 'white' : '#475569' }}>{test}</span>
-                            <button className="add-btn" style={{
-                              width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              background: selectedTests.includes(test) ? 'rgba(255,255,255,0.2)' : '#e2e8f0',
-                              color: selectedTests.includes(test) ? 'white' : '#64748b',
-                              borderRadius: '50%', border: 'none', cursor: 'pointer',
-                              padding: 0, margin: 0, fontSize: '14px'
-                            }} onClick={(e) => { e.stopPropagation(); toggleTestSelection(test); }}>
+                            <span>{test}</span>
+                            <span className="test-action-icon">
                               {selectedTests.includes(test) ? '−' : '+'}
-                            </button>
+                            </span>
                           </div>
                         ))}
                       </div>

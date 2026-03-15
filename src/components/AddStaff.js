@@ -1,4 +1,5 @@
 import { useState } from "react";
+import API_BASE_URL from "../apiConfig";
 
 function AddStaff({ onBack, refreshStaff }) {
     const [formData, setFormData] = useState({
@@ -25,7 +26,7 @@ function AddStaff({ onBack, refreshStaff }) {
         setLoading(true);
 
         try {
-            const response = await fetch("http://localhost:8080/api/auth/signup", {
+            const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

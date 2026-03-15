@@ -148,40 +148,33 @@ function TeamDirectory({ staffMembers, onBack, staffSearch, setStaffSearch, refr
 
     return (
         <div className="team-directory-wrapper">
-            <div className="directory-header">
-                <div className="header-left">
-                    <button className="global-back-btn" onClick={onBack}>
-                        <i className="fa-solid fa-arrow-left"></i> Back
-                    </button>
-                    <div className="title-group">
-                        <h2>
-                            {activeCategory === "all" || !activeCategory ? "Staff" :
-                                activeCategory === "lab" ? "Lab Staff" :
-                                    activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1)} Directory
-                        </h2>
-                        <p>Manage and monitor hospital staff activity</p>
-                    </div>
-                </div>
-
-                <div className="search-bar-premium" style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+            <div className="lab-records-actions-bar-container" style={{ marginBottom: '25px' }}>
+                <button className="global-back-btn" onClick={onBack} style={{ padding: '8px 15px', margin: 0 }}>
+                    <i className="fa-solid fa-arrow-left"></i> Back
+                </button>
+                <div className="lab-records-filters">
+                    <input
+                        type="text"
+                        className="premium-filter-input"
+                        placeholder="Search by name, email, or phone..."
+                        value={staffSearch}
+                        onChange={(e) => setStaffSearch(e.target.value)}
+                    />
                     <button
                         className={`refresh-btn-premium ${isRefreshing ? 'refreshing' : ''}`}
                         onClick={handleRefresh}
                         title="Refresh Staff List"
                         disabled={isRefreshing}
+                        style={{ height: '42px', width: '42px', borderRadius: '10px', background: 'white', border: '1px solid #e2e8f0', cursor: 'pointer', color: '#6366f1' }}
                     >
                         <i className={`fa-solid fa-rotate ${isRefreshing ? 'fa-spin' : ''}`}></i>
                     </button>
-                    <div style={{ position: 'relative', flex: 1 }}>
-                        <i className="fa-solid fa-magnifying-glass" style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }}></i>
-                        <input
-                            type="text"
-                            placeholder="Search by name, email, or phone..."
-                            value={staffSearch}
-                            onChange={(e) => setStaffSearch(e.target.value)}
-                            style={{ padding: '12px 15px 12px 45px', borderRadius: '12px', border: '2px solid #e2e8f0', width: '100%' }}
-                        />
-                    </div>
+                    <button
+                        className="clear-filters-primary-btn"
+                        onClick={() => setStaffSearch("")}
+                    >
+                        Clear Filters
+                    </button>
                 </div>
             </div>
 
@@ -207,7 +200,7 @@ function TeamDirectory({ staffMembers, onBack, staffSearch, setStaffSearch, refr
                 ) : (
                     filteredStaff.map((staff) => (
                         <div key={staff.id} className={`staff-card-horizontal ${selectedIds.includes(staff.id) ? 'selected' : ''}`}>
-                            <div className="u-card-checkbox">
+                            <div className="staff-selection-checkbox">
                                 <input
                                     type="checkbox"
                                     className="table-checkbox"

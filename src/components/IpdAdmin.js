@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import API_BASE_URL from "../apiConfig";
 import "../App.css";
 
 function IpdAdmin({ onBack, activeSubTab }) {
@@ -51,7 +52,7 @@ function IpdAdmin({ onBack, activeSubTab }) {
     const fetchIpdRecords = async () => {
         try {
             const token = localStorage.getItem("jwtToken");
-            const res = await fetch("http://localhost:8080/api/ipd", {
+            const res = await fetch(`${API_BASE_URL}/api/ipd`, {
                 headers: { "Authorization": `Bearer ${token}` }
             });
             if (res.ok) {
@@ -74,7 +75,7 @@ function IpdAdmin({ onBack, activeSubTab }) {
             if (admitTime.period === 'AM' && h === 12) h = 0;
             const fullDateTime = `${admitForm.admissionDate}T${String(h).padStart(2, '0')}:${admitTime.minute}:00`;
 
-            const res = await fetch("http://localhost:8080/api/ipd/admit", {
+            const res = await fetch(`${API_BASE_URL}/api/ipd/admit`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -105,7 +106,7 @@ function IpdAdmin({ onBack, activeSubTab }) {
         e.preventDefault();
         try {
             const token = localStorage.getItem("jwtToken");
-            const res = await fetch(`http://localhost:8080/api/ipd/discharge/${selectedRecord.id}`, {
+            const res = await fetch(`${API_BASE_URL}/api/ipd/discharge/${selectedRecord.id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -146,7 +147,7 @@ function IpdAdmin({ onBack, activeSubTab }) {
         e.preventDefault();
         try {
             const token = localStorage.getItem("jwtToken");
-            const res = await fetch(`http://localhost:8080/api/ipd/${selectedRecord.id}`, {
+            const res = await fetch(`${API_BASE_URL}/api/ipd/${selectedRecord.id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -168,7 +169,7 @@ function IpdAdmin({ onBack, activeSubTab }) {
         if (window.confirm("Are you sure you want to delete this IPD record?")) {
             try {
                 const token = localStorage.getItem("jwtToken");
-                const res = await fetch(`http://localhost:8080/api/ipd/${id}`, {
+                const res = await fetch(`${API_BASE_URL}/api/ipd/${id}`, {
                     method: "DELETE",
                     headers: { "Authorization": `Bearer ${token}` }
                 });
@@ -187,7 +188,7 @@ function IpdAdmin({ onBack, activeSubTab }) {
             try {
                 const token = localStorage.getItem("jwtToken");
                 const deletePromises = selectedIds.map(id =>
-                    fetch(`http://localhost:8080/api/ipd/${id}`, {
+                    fetch(`${API_BASE_URL}/api/ipd/${id}`, {
                         method: "DELETE",
                         headers: { "Authorization": `Bearer ${token}` }
                     })
@@ -481,32 +482,34 @@ function IpdAdmin({ onBack, activeSubTab }) {
                         </div>
                     )}
 
-                    <div className="filters-container" style={{ display: 'flex', gap: '15px', marginBottom: '25px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <div className="lab-records-actions-bar-container" style={{ marginBottom: '25px' }}>
                         <button className="global-back-btn" onClick={onBack} style={{ padding: '8px 15px', margin: 0 }}>
-                            ← Back
+                            <i className="fa-solid fa-arrow-left"></i> Back
                         </button>
-                        <div className="search-bar-premium" style={{ border: '1px solid #e2e8f0', background: 'white', flex: 1 }}>
-                            <i className="fa-solid fa-magnifying-glass"></i>
+                        <div className="lab-records-filters">
                             <input
                                 type="text"
+                                className="premium-filter-input"
                                 placeholder="Search Patients..."
                                 value={admittedSearch}
                                 onChange={(e) => setAdmittedSearch(e.target.value)}
                             />
+                            <div className="date-input-wrapper-premium">
+                                <i className="fa-solid fa-calendar-days"></i>
+                                <input
+                                    type="date"
+                                    className="premium-date-input"
+                                    value={admittedDateFilter}
+                                    onChange={(e) => setAdmittedDateFilter(e.target.value)}
+                                />
+                            </div>
+                            <button
+                                className="clear-filters-primary-btn"
+                                onClick={() => { setAdmittedSearch(""); setAdmittedDateFilter(""); }}
+                            >
+                                Clear Filters
+                            </button>
                         </div>
-                        <input
-                            type="date"
-                            className="premium-date-input"
-                            value={admittedDateFilter}
-                            onChange={(e) => setAdmittedDateFilter(e.target.value)}
-                            style={{ padding: '8px', borderRadius: '10px', border: '1px solid #e2e8f0' }}
-                        />
-                        <button
-                            onClick={() => { setAdmittedSearch(""); setAdmittedDateFilter(""); }}
-                            style={{ padding: '8px 15px', borderRadius: '8px', border: 'none', background: '#e2e8f0', cursor: 'pointer', fontWeight: 'bold', color: '#64748b' }}
-                        >
-                            Clear Filters
-                        </button>
                     </div>
 
                     <div style={{ marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -616,32 +619,34 @@ function IpdAdmin({ onBack, activeSubTab }) {
                         </div>
                     </div>
 
-                    <div className="filters-container" style={{ display: 'flex', gap: '15px', marginBottom: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <div className="lab-records-actions-bar-container" style={{ marginBottom: '20px' }}>
                         <button className="global-back-btn" onClick={onBack} style={{ padding: '8px 15px', margin: 0 }}>
-                            ← Back
+                            <i className="fa-solid fa-arrow-left"></i> Back
                         </button>
-                        <div className="search-bar-premium" style={{ border: '1px solid #e2e8f0', background: 'white', flex: 1 }}>
-                            <i className="fa-solid fa-magnifying-glass"></i>
+                        <div className="lab-records-filters">
                             <input
                                 type="text"
+                                className="premium-filter-input"
                                 placeholder="Search Patients..."
                                 value={allSearch}
                                 onChange={(e) => setAllSearch(e.target.value)}
                             />
+                            <div className="date-input-wrapper-premium">
+                                <i className="fa-solid fa-calendar-days"></i>
+                                <input
+                                    type="date"
+                                    className="premium-date-input"
+                                    value={allDateFilter}
+                                    onChange={(e) => setAllDateFilter(e.target.value)}
+                                />
+                            </div>
+                            <button
+                                className="clear-filters-primary-btn"
+                                onClick={() => { setAllSearch(""); setAllDateFilter(""); }}
+                            >
+                                Clear Filters
+                            </button>
                         </div>
-                        <input
-                            type="date"
-                            className="premium-date-input"
-                            value={allDateFilter}
-                            onChange={(e) => setAllDateFilter(e.target.value)}
-                            style={{ padding: '8px', borderRadius: '10px', border: '1px solid #e2e8f0' }}
-                        />
-                        <button
-                            onClick={() => { setAllSearch(""); setAllDateFilter(""); }}
-                            style={{ padding: '8px 15px', borderRadius: '8px', border: 'none', background: '#e2e8f0', cursor: 'pointer', fontWeight: 'bold', color: '#64748b' }}
-                        >
-                            Clear Filters
-                        </button>
                     </div>
                     {selectedIds.length > 0 && (
                         <div style={{ marginBottom: '15px' }}>

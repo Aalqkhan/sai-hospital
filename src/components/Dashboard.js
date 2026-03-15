@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import API_BASE_URL from "../apiConfig";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import LabAdmin from "./LabAdmin";
@@ -44,11 +45,26 @@ function Dashboard() {
   // SELECTION STATE
   const [selectedIds, setSelectedIds] = useState([]);
 
+  // Mobile Sidebar State
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  const handleNavClick = (page) => {
+    setActivePage(page);
+    setIsMobileSidebarOpen(false);
+  };
+
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   /* ---------------- LOAD APPOINTMENTS ---------------- */
   const fetchAppointments = async () => {
     try {
       const token = localStorage.getItem("jwtToken");
-      const res = await fetch("http://localhost:8080/api/appointments", {
+      const res = await fetch(`${API_BASE_URL}/api/appointments`, {
         headers: {
           "Authorization": `Bearer ${token}`
         }
@@ -137,7 +153,7 @@ Date: ${formatDate(record.appointmentDate)}`;
   const fetchStaffMembers = async () => {
     try {
       const token = localStorage.getItem("jwtToken");
-      const res = await fetch("http://localhost:8080/api/users", {
+      const res = await fetch(`${API_BASE_URL}/api/users`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {
@@ -154,7 +170,7 @@ Date: ${formatDate(record.appointmentDate)}`;
   const fetchLabRecords = async () => {
     try {
       const token = localStorage.getItem("jwtToken");
-      const res = await fetch("http://localhost:8080/api/lab-records", {
+      const res = await fetch(`${API_BASE_URL}/api/lab-records`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {
@@ -171,7 +187,7 @@ Date: ${formatDate(record.appointmentDate)}`;
   const fetchIpdRecords = async () => {
     try {
       const token = localStorage.getItem("jwtToken");
-      const res = await fetch("http://localhost:8080/api/ipd", {
+      const res = await fetch(`${API_BASE_URL}/api/ipd`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {
@@ -188,7 +204,7 @@ Date: ${formatDate(record.appointmentDate)}`;
   const fetchActivityLogs = async () => {
     try {
       const token = localStorage.getItem("jwtToken");
-      const res = await fetch("http://localhost:8080/api/activity-logs", {
+      const res = await fetch(`${API_BASE_URL}/api/activity-logs`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {
@@ -254,7 +270,7 @@ Date: ${formatDate(record.appointmentDate)}`;
         body.scheduledTime = scheduleDetails.time;
       }
 
-      const res = await fetch(`http://localhost:8080/api/appointments/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/appointments/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -273,7 +289,7 @@ Date: ${formatDate(record.appointmentDate)}`;
   const updateVisitStatus = async (id, newVisitStatus) => {
     try {
       const token = localStorage.getItem("jwtToken");
-      const res = await fetch(`http://localhost:8080/api/appointments/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/appointments/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -335,7 +351,7 @@ Date: ${formatDate(record.appointmentDate)}`;
     if (window.confirm("Delete this appointment?")) {
       try {
         const token = localStorage.getItem("jwtToken");
-        const res = await fetch(`http://localhost:8080/api/appointments/${id}`, {
+        const res = await fetch(`${API_BASE_URL}/api/appointments/${id}`, {
           method: "DELETE",
           headers: {
             "Authorization": `Bearer ${token}`
@@ -357,7 +373,7 @@ Date: ${formatDate(record.appointmentDate)}`;
         const token = localStorage.getItem("jwtToken");
         // We'll perform deletions in parallel for simplicity on the backend
         const deletePromises = selectedIds.map(id =>
-          fetch(`http://localhost:8080/api/appointments/${id}`, {
+          fetch(`${API_BASE_URL}/api/appointments/${id}`, {
             method: "DELETE",
             headers: { "Authorization": `Bearer ${token}` }
           })
@@ -401,7 +417,7 @@ Date: ${formatDate(record.appointmentDate)}`;
   const saveEdit = async () => {
     try {
       const token = localStorage.getItem("jwtToken");
-      const res = await fetch(`http://localhost:8080/api/appointments/${editData.id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/appointments/${editData.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -423,7 +439,7 @@ Date: ${formatDate(record.appointmentDate)}`;
     try {
       const token = localStorage.getItem("jwtToken");
       if (token) {
-        await fetch("http://localhost:8080/api/auth/logout", {
+        await fetch(`${API_BASE_URL}/api/auth/logout`, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${token}`
@@ -778,33 +794,38 @@ Date: ${formatDate(record.appointmentDate)}`;
     return (
       <div className="patients-tab-container">
         {/* Controls */}
-        <div className="filters-container" style={{ display: 'flex', gap: '15px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div className="lab-records-actions-bar-container" style={{ marginBottom: '20px' }}>
           <button
             className="global-back-btn"
             onClick={() => setActivePage("appointments")}
             style={{ padding: '8px 15px', margin: 0 }}
           >
-            ← Back
+            <i className="fa-solid fa-arrow-left"></i> Back
           </button>
-          <input
-            type="text"
-            placeholder="Search Patients..."
-            value={patientSearch}
-            onChange={(e) => setPatientSearch(e.target.value)}
-            style={{ padding: '8px', flex: 1, borderRadius: '4px', border: '1px solid #ccc' }}
-          />
-          <input
-            type="date"
-            value={patientDateFilter}
-            onChange={(e) => setPatientDateFilter(e.target.value)}
-            style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-          />
-          <button
-            onClick={() => { setPatientSearch(""); setPatientDateFilter(""); setRejectedSearch(""); }}
-            style={{ padding: '8px 15px', borderRadius: '4px', border: 'none', background: '#e2e8f0', cursor: 'pointer', fontWeight: 'bold' }}
-          >
-            Clear Filters
-          </button>
+          <div className="lab-records-filters">
+            <input
+              type="text"
+              className="premium-filter-input"
+              placeholder="Search Patients..."
+              value={patientSearch}
+              onChange={(e) => setPatientSearch(e.target.value)}
+            />
+            <div className="date-input-wrapper-premium">
+              <i className="fa-solid fa-calendar-days"></i>
+              <input
+                type="date"
+                className="premium-date-input"
+                value={patientDateFilter}
+                onChange={(e) => setPatientDateFilter(e.target.value)}
+              />
+            </div>
+            <button
+              className="clear-filters-primary-btn"
+              onClick={() => { setPatientSearch(""); setPatientDateFilter(""); setRejectedSearch(""); }}
+            >
+              Clear Filters
+            </button>
+          </div>
         </div>
 
         <div className="patients-tables-layout">
@@ -1073,10 +1094,39 @@ Date: ${formatDate(record.appointmentDate)}`;
         filteredAppointments = filteredAppointments.filter(a => a.visitStatus === "COMPLETED");
       }
 
+      const userName = localStorage.getItem("userName") || "Admin";
+      const formatTimeLong = (date) => date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+      const formatDateLong = (date) => date.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
       return (
         <>
           {activePage === "appointments" && (
             <div className="dashboard-sections">
+              <div className="dashboard-hero">
+                <div className="hero-content">
+                  <h1>Welcome back, {userName}!</h1>
+                  <p>Here's what's happening at Sai Hospital today.</p>
+                </div>
+                <div className="hero-stats">
+                  <span className="live-time">{formatTimeLong(currentTime)}</span>
+                  <span className="live-date">{formatDateLong(currentTime)}</span>
+                </div>
+              </div>
+
+              <div className="quick-actions-bar">
+                <button className="quick-action-btn" onClick={() => setActivePage("add_staff")}>
+                  <i className="fa-solid fa-user-plus"></i> Add New Staff
+                </button>
+                <button className="quick-action-btn" onClick={() => setActivePage("lab_requests")}>
+                  <i className="fa-solid fa-vial-circle-check"></i> Test Requests
+                </button>
+                <button className="quick-action-btn" onClick={() => setActivePage("ipd_new")}>
+                  <i className="fa-solid fa-bed-pulse"></i> New IPD Entry
+                </button>
+                <button className="quick-action-btn" onClick={() => setActivePage("staff_logs")}>
+                  <i className="fa-solid fa-clock-rotate-left"></i> Activity Logs
+                </button>
+              </div>
               {/* Patient Overview Section */}
               <div className="dashboard-section">
                 <div className="section-label">
@@ -1182,31 +1232,36 @@ Date: ${formatDate(record.appointmentDate)}`;
 
           {activePage !== "appointments" && (
             <>
-              <div className="filters-container" style={{ display: 'flex', gap: '15px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div className="lab-records-actions-bar-container" style={{ marginBottom: '20px' }}>
                 {activePage === "appointments_completed" && (
                   <button className="global-back-btn" onClick={() => setActivePage("appointments")} style={{ margin: 0, padding: '8px 15px' }}>
                     <i className="fa-solid fa-arrow-left"></i> Back
                   </button>
                 )}
-                <input
-                  type="text"
-                  placeholder="Search Appointments..."
-                  value={appointmentSearch}
-                  onChange={(e) => setAppointmentSearch(e.target.value)}
-                  style={{ padding: '10px', flex: 1, borderRadius: '6px', border: '1px solid #ccc' }}
-                />
-                <input
-                  type="date"
-                  value={appointmentDateFilter}
-                  onChange={(e) => setAppointmentDateFilter(e.target.value)}
-                  style={{ padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }}
-                />
-                <button
-                  onClick={() => { setAppointmentSearch(""); setAppointmentDateFilter(""); }}
-                  style={{ padding: '10px 20px', borderRadius: '6px', border: 'none', background: '#e2e8f0', cursor: 'pointer', fontWeight: 'bold' }}
-                >
-                  Clear Filters
-                </button>
+                <div className="lab-records-filters">
+                  <input
+                    type="text"
+                    className="premium-filter-input"
+                    placeholder="Search Appointments..."
+                    value={appointmentSearch}
+                    onChange={(e) => setAppointmentSearch(e.target.value)}
+                  />
+                  <div className="date-input-wrapper-premium">
+                    <i className="fa-solid fa-calendar-days"></i>
+                    <input
+                      type="date"
+                      className="premium-date-input"
+                      value={appointmentDateFilter}
+                      onChange={(e) => setAppointmentDateFilter(e.target.value)}
+                    />
+                  </div>
+                  <button
+                    className="clear-filters-primary-btn"
+                    onClick={() => { setAppointmentSearch(""); setAppointmentDateFilter(""); }}
+                  >
+                    Clear Filters
+                  </button>
+                </div>
               </div>
 
 
@@ -1262,31 +1317,23 @@ Date: ${formatDate(record.appointmentDate)}`;
               </div>
 
               {/* COMPACT HEADER & FILTERS */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <button className="global-back-btn" onClick={() => setActivePage("appointments")} style={{ margin: 0, padding: '8px 16px', fontSize: '13px' }}>
-                    <i className="fa-solid fa-arrow-left"></i>
-                  </button>
-                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#0f172a' }}>Staff Activity Feed</h3>
-                </div>
-
-                <div style={{ display: 'flex', gap: '10px', flex: 1, justifyContent: 'flex-end', maxWidth: '650px' }}>
-                  <div className="search-bar-premium" style={{ border: '1px solid #f1f5f9', background: '#f8fafc', height: '38px', flex: 1 }}>
-                    <i className="fa-solid fa-magnifying-glass" style={{ fontSize: '12px' }}></i>
-                    <input
-                      type="text"
-                      placeholder="Filter records..."
-                      value={logSearch}
-                      onChange={(e) => setLogSearch(e.target.value)}
-                      style={{ fontSize: '13px' }}
-                    />
-                  </div>
-
+              <div className="lab-records-actions-bar-container" style={{ marginBottom: '20px' }}>
+                <button className="global-back-btn" onClick={() => setActivePage("appointments")} style={{ margin: 0, padding: '8px 16px', fontSize: '13px' }}>
+                  <i className="fa-solid fa-arrow-left"></i> Back
+                </button>
+                <div className="lab-records-filters">
+                  <input
+                    type="text"
+                    className="premium-filter-input"
+                    placeholder="Search activity records..."
+                    value={logSearch}
+                    onChange={(e) => setLogSearch(e.target.value)}
+                  />
                   <select
-                    className="premium-date-input"
+                    className="premium-filter-input"
                     value={actionTypeFilter}
                     onChange={(e) => setActionTypeFilter(e.target.value)}
-                    style={{ height: '38px', minWidth: '140px', padding: '0 10px', borderRadius: '10px', border: '1px solid #f1f5f9', fontSize: '13px', fontWeight: 600 }}
+                    style={{ flex: '0 0 180px' }}
                   >
                     <option value="">All Actions</option>
                     <option value="LOGIN">Logins</option>
@@ -1295,9 +1342,8 @@ Date: ${formatDate(record.appointmentDate)}`;
                     <option value="UPDATE">Updates</option>
                     <option value="DELETE">Deletions</option>
                   </select>
-
-                  <button className="primary-btn" onClick={fetchActivityLogs} style={{ margin: 0, width: '38px', height: '38px', padding: 0, borderRadius: '10px' }}>
-                    <i className="fa-solid fa-rotate" style={{ fontSize: '13px' }}></i>
+                  <button className="clear-filters-primary-btn" onClick={fetchActivityLogs}>
+                    <i className="fa-solid fa-rotate" style={{ marginRight: '8px' }}></i> Refresh
                   </button>
                 </div>
               </div>
@@ -1398,12 +1444,24 @@ Date: ${formatDate(record.appointmentDate)}`;
 
   return (
     <div className="admin-layout">
+      {/* Mobile Top Bar */}
+      <div className="mobile-admin-header">
+        <h2 className="logo" style={{ color: 'var(--primary)', margin: 0, fontSize: '20px' }}>🏥 Sai Hospital</h2>
+        <button className="mobile-menu-btn" onClick={() => setIsMobileSidebarOpen(true)}>
+          <i className="fa-solid fa-bars"></i>
+        </button>
+      </div>
 
-      <aside className="sidebar">
+      {/* Mobile Sidebar Overlay */}
+      {isMobileSidebarOpen && (
+        <div className="sidebar-overlay" onClick={() => setIsMobileSidebarOpen(false)}></div>
+      )}
+
+      <aside className={`sidebar ${isMobileSidebarOpen ? 'open' : ''}`}>
         <h2>Sai Hospital</h2>
         <nav className="hierarchical-nav">
           <div className="nav-group">
-            <a onClick={() => setActivePage("appointments")} className={activePage === "appointments" ? "active" : ""}>
+            <a onClick={() => handleNavClick("appointments")} className={activePage === "appointments" ? "active" : ""}>
               <i className="fa-solid fa-gauge"></i> Dashboard
             </a>
           </div>
@@ -1413,9 +1471,9 @@ Date: ${formatDate(record.appointmentDate)}`;
               <i className="fa-solid fa-hospital-user"></i> Patients
             </div>
             <div className="nav-sub-items">
-              <a onClick={() => setActivePage("patients_pending")}>Pending Patients</a>
-              <a onClick={() => setActivePage("patients_approved")}>Approved Patients</a>
-              <a onClick={() => setActivePage("patients_rejected")}>Rejected Patients</a>
+              <a onClick={() => handleNavClick("patients_pending")}>Pending Patients</a>
+              <a onClick={() => handleNavClick("patients_approved")}>Approved Patients</a>
+              <a onClick={() => handleNavClick("patients_rejected")}>Rejected Patients</a>
             </div>
           </div>
 
@@ -1466,7 +1524,7 @@ Date: ${formatDate(record.appointmentDate)}`;
               <i className="fa-solid fa-shield-halved"></i> Security
             </div>
             <div className="nav-sub-items">
-              <a onClick={() => setActivePage("change_password")}>Change Password</a>
+              <a onClick={() => handleNavClick("change_password")}>Change Password</a>
             </div>
           </div>
 
