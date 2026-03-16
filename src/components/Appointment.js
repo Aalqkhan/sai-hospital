@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import API_BASE_URL from "../apiConfig";
 
 function Appointment() {
   const location = useLocation();
@@ -85,7 +86,7 @@ function Appointment() {
         headers["Authorization"] = `Bearer ${token}`;
       }
 
-      const response = await fetch("http://localhost:8080/api/appointments", {
+      const response = await fetch(`${API_BASE_URL}/api/appointments`, {
         method: "POST",
         headers: headers,
         body: JSON.stringify(formData)

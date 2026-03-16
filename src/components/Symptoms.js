@@ -204,16 +204,18 @@ function Symptoms() {
 
           {result && result.type !== 'error' && (
             <div className={`diagnostic-result-card ${result.type}`}>
-               <div className="diag-badge normal" style={{ position: 'absolute', top: '40px', right: '40px' }}>
-                  Clinical Logic v2.5
-               </div>
-               <i className={`${result.icon} diagnostic-card-bg`}></i>
-               
-               <div className="diag-header">
-                  {result.badges.map((b, i) => (
-                    <span key={i} className={`diag-badge ${result.type === 'emergency' ? 'alert' : 'normal'}`}>{b}</span>
-                  ))}
-               </div>
+
+
+                              <div className="diag-header-modern">
+                   <div className="diag-icon-box">
+                      <i className={result.icon}></i>
+                   </div>
+                   <div className="diag-badges-flex">
+                      {result.badges.map((b, i) => (
+                        <span key={i} className={`diag-badge ${result.type === 'emergency' ? 'alert' : 'normal'}`}>{b}</span>
+                      ))}
+                   </div>
+                </div>
 
                <p className="diag-main-desc">{result.message}</p>
 

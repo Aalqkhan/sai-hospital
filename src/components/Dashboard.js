@@ -1458,7 +1458,10 @@ Date: ${formatDate(record.appointmentDate)}`;
       )}
 
       <aside className={`sidebar ${isMobileSidebarOpen ? 'open' : ''}`}>
-        <h2>Sai Hospital</h2>
+        <button className="mobile-close-btn" onClick={() => setIsMobileSidebarOpen(false)}>
+          <i className="fa-solid fa-xmark"></i>
+        </button>
+        <h2 className="sidebar-logo">Sai Hospital</h2>
         <nav className="hierarchical-nav">
           <div className="nav-group">
             <a onClick={() => handleNavClick("appointments")} className={activePage === "appointments" ? "active" : ""}>
@@ -1619,8 +1622,8 @@ Date: ${formatDate(record.appointmentDate)}`;
               <i className="fa-solid fa-trash"></i> Delete Selected
             </button>
           )}
-          <button className="global-back-btn" onClick={(e) => { e.stopPropagation(); setSelectedIds([]); }} style={{ margin: 0, padding: "8px 15px" }}>
-            Cancel
+          <button className="global-back-btn" onClick={(e) => { e.stopPropagation(); setSelectedIds([]); }}>
+            <i className="fa-solid fa-xmark"></i> <span>Cancel</span>
           </button>
         </div>
       )}

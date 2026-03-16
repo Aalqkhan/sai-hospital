@@ -1,4 +1,5 @@
 import React from "react";
+import API_BASE_URL from "../apiConfig";
 
 const renderStaffSummary = (data) => {
     const total = data.length;
@@ -93,7 +94,7 @@ function TeamDirectory({ staffMembers, onBack, staffSearch, setStaffSearch, refr
         if (window.confirm("Delete this staff member?")) {
             try {
                 const token = localStorage.getItem("jwtToken");
-                const res = await fetch(`http://localhost:8080/api/auth/staff/${id}`, {
+                const res = await fetch(`${API_BASE_URL}/api/auth/staff/${id}`, {
                     method: "DELETE",
                     headers: { "Authorization": `Bearer ${token}` }
                 });
@@ -112,7 +113,7 @@ function TeamDirectory({ staffMembers, onBack, staffSearch, setStaffSearch, refr
             try {
                 const token = localStorage.getItem("jwtToken");
                 const deletePromises = selectedIds.map(id =>
-                    fetch(`http://localhost:8080/api/auth/staff/${id}`, {
+                    fetch(`${API_BASE_URL}/api/auth/staff/${id}`, {
                         method: "DELETE",
                         headers: { "Authorization": `Bearer ${token}` }
                     })
@@ -255,8 +256,8 @@ function TeamDirectory({ staffMembers, onBack, staffSearch, setStaffSearch, refr
                     <button className="bulk-delete-btn" onClick={handleBulkDelete}>
                         <i className="fa-solid fa-trash"></i> Delete Selected
                     </button>
-                    <button className="global-back-btn" onClick={() => setSelectedIds([])} style={{ margin: 0, padding: "8px 15px" }}>
-                        Cancel
+                    <button className="global-back-btn" onClick={() => setSelectedIds([])}>
+                        <i className="fa-solid fa-xmark"></i> <span>Cancel</span>
                     </button>
                 </div>
             )}

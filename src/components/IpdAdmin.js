@@ -944,8 +944,8 @@ function IpdAdmin({ onBack, activeSubTab }) {
                     <button className="bulk-delete-btn" onClick={handleBulkDelete}>
                         <i className="fa-solid fa-trash"></i> Delete Selected
                     </button>
-                    <button className="global-back-btn" onClick={() => setSelectedIds([])} style={{ margin: 0, padding: "8px 15px" }}>
-                        Cancel
+                    <button className="global-back-btn" onClick={() => setSelectedIds([])}>
+                        <i className="fa-solid fa-xmark"></i> <span>Cancel</span>
                     </button>
                 </div>
             )}
